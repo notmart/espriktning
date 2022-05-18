@@ -395,12 +395,12 @@
   },
   "pcbnew": {
     "last_paths": {
-      "gencad": "",
+      "gencad": "espriktning-rear.sch.cad",
       "idf": "",
       "netlist": "",
       "specctra_dsn": "",
-      "step": "",
-      "vrml": ""
+      "step": "espriktning-rear.sch.step",
+      "vrml": "espriktning-rear.sch.wrl"
     },
     "page_layout_descr_file": ""
   },
