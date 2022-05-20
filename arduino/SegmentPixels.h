@@ -17,29 +17,44 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
  
-#include <Adafruit_NeoPixel.h>
+//#include <Adafruit_NeoPixel.h>
+#include <NeoPixelBus.h>
 
 class SegmentPixels {
 public:
-    SegmentPixels(int numDigits, int pin, int pixelType, int paddingPixels);
+    // NeoPixelBus needs to be a global static in the man file, so pass at a pointer TODO: subclass?
+    SegmentPixels(NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> *pixels, int numDigits, int paddingPixels);
     ~SegmentPixels();
 
+    static int numPixelsForDigits(int numDigits, int paddingPixels);
     void begin();
  
-    void showNumber(int number);
-    void setColor(int r, int g, int b);
+    void setNumber(int number);
+    void setColor(uint8_t r, uint8_t g, uint8_t b);
+    void updateAnimation();
 
 private:
     static const int s_segmentFlags[10];
+    NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> *m_pixels;
 
-    Adafruit_NeoPixel m_pixels;
+   // Adafruit_NeoPixel m_pixels;
     int m_numPixels = 0;
     int m_numDigits = 0;
     int m_paddingPixels = 0;
 
     int m_number = 0;
 
-    int m_red = 255;
-    int m_green = 255;
-    int m_blue = 255;
+    uint32_t m_pixelMask = 0;
+    uint32_t m_oldPixelMask = 0;
+    uint8_t m_red = 0;
+    uint8_t m_green = 0;
+    uint8_t m_blue = 0;
+
+    uint8_t m_oldRed = 0;
+    uint8_t m_oldGreen = 0;
+    uint8_t m_oldBlue = 0;
+
+    double m_animProgress = 0;
+    unsigned long m_animStarted = 0;
+    unsigned long m_lastFrame = 0;
 };

@@ -44,10 +44,12 @@ static const uint measurementTime = 10000;
 
 bool fan = false;
 
+unsigned long lastNumUp = 0;
 int num = 0;
 
 WifiMQTTManager wifiMQTT("ESPriktning", "PM2.5");
-SegmentPixels pixels(2, PIN_PIXELS, NEO_GRB, 3);
+NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> pixelBus(SegmentPixels::numPixelsForDigits(2,3), PIN_PIXELS);
+SegmentPixels pixels(&pixelBus, 2, 3);
 Tokenizer tokenizer;
 
 void setup()
@@ -55,12 +57,14 @@ void setup()
     Serial.begin(115200);
     // Recycle the flash button as a factory reset
     pinMode(0, INPUT_PULLUP);
-  //  wifiMQTT.setup();
-    pmSerial.begin(PM1006::BIT_RATE);
-    lastMsg = millis();
     pinMode(PIN_FAN, OUTPUT);
     pinMode(PIN_LDR, INPUT);
+
+    pmSerial.begin(PM1006::BIT_RATE);
+    lastMsg = millis();
     pixels.begin();
+    pixels.setColor(3,6,8);
+   // wifiMQTT.setup();
 }
 
 void loop() {
@@ -70,10 +74,19 @@ void loop() {
    // Serial.println(analogRead(PIN_LDR));
 
    //TODO: delete, just to test number encoding to leds
-   //pixels.setColor(8, 2, 0);
-   //pixels.showNumber(num++);
-   //if (num > 99) num = 0;
-   //delay(500);return;
+   /*unsigned long absTime = millis();
+   if (absTime - lastNumUp > 1000) {
+       pixels.setColor(min(50, num/10), 50 - num/20, num <= 200 ? 20 - num/10 : 0);
+       pixels.setNumber(num/10);
+       //Serial.println(num);
+
+       lastNumUp = absTime;
+
+       //delay(500);return;
+   } else {
+       pixels.updateAnimation(absTime);
+   }*/
+
 
     // TODO: parse some commands form the tokenizer
     if (tokenizer.tokenizeFromSerial()) {
@@ -84,8 +97,8 @@ void loop() {
             Serial.print(": ");
             Serial.println(tokenizer[i]);
         }
+        //num = tokenizer[0].toInt();
     }
- 
 
     if (digitalRead(0) == 0) {
         if (factoryResetButtonDownTime == 0) {
@@ -112,7 +125,9 @@ void loop() {
         Serial.print("New sensor value:");
         Serial.println(String(pm2_5).c_str());
 
-        pixels.showNumber(pm2_5);
+        pixels.setColor(min(50, pm2_5/15), 50 - pm2_5/20, num <= 200 ? 20 - pm2_5/10 : 0);
+        pixels.setNumber(pm2_5/10);
+        
     //   std::shared_ptr<PubSubClient> client = wifiMQTT.ensureMqttClientConnected();
     //   client->loop();
     //   client->publish(wifiMQTT.topic(), String(pm2_5).c_str(), true);
@@ -129,4 +144,5 @@ void loop() {
             fan = true;
         }
     }
+    pixels.updateAnimation();
 }
