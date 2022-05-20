@@ -125,7 +125,7 @@ void loop() {
         Serial.print("New sensor value:");
         Serial.println(String(pm2_5).c_str());
 
-        pixels.setColor(min(50, pm2_5/15), 50 - pm2_5/20, num <= 200 ? 20 - pm2_5/10 : 0);
+        pixels.setColor(min(50, pm2_5/10), 50 - pm2_5/20, pm2_5 <= 200 ? 20 - pm2_5/10 : 0);
         pixels.setNumber(pm2_5/10);
         
     //   std::shared_ptr<PubSubClient> client = wifiMQTT.ensureMqttClientConnected();
