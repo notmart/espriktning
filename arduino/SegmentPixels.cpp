@@ -54,18 +54,19 @@ int SegmentPixels::numPixelsForDigits(int numDigits, int paddingPixels)
 void SegmentPixels::begin()
 {
     m_pixels->Begin();
-    m_pixels->Show();
+    setNumber(m_number);
 }
 
 void SegmentPixels::updateAnimation()
 {
     unsigned long absTime = millis();
-    if (absTime - m_lastFrame <= 25 || absTime - m_animStarted > 500) {
+    // 25 msecs corresponds to ~40 fps
+    if (absTime - m_lastFrame <= 25 || absTime - m_animStarted > m_animDuration) {
         return;
     }
 
     // TODO: easing curves
-    m_animProgress = min(1.0, double(absTime - m_animStarted) / 500);
+    m_animProgress = min(1.0, double(absTime - m_animStarted) / m_animDuration);
     m_lastFrame = absTime;
 
     uint8_t r = 0;
@@ -164,5 +165,4 @@ void SegmentPixels::setColor(uint8_t r, uint8_t g, uint8_t b)
     m_green = g;
     m_blue = b;
     m_animStarted = millis();
-   // showNumber(m_number);
 }

@@ -57,4 +57,5 @@ private:
     double m_animProgress = 0;
     unsigned long m_animStarted = 0;
     unsigned long m_lastFrame = 0;
+    uint16_t m_animDuration = 1000;
 };
