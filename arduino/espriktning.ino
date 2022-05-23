@@ -38,9 +38,13 @@ unsigned long factoryResetButtonDownTime = 0;
 
 unsigned long lastMsg = 0;
 
-static const uint fanOnTime = 5000;
-static const uint fanOffTime = 8000;
-static const uint measurementTime = 10000;
+static const uint fanOnTime = 0;
+static const uint fanOffTime = 20000;
+static const uint measurementTime = 30000;
+
+static const uint ldrInterval = 120000;
+unsigned long lastLdrTime = 0;
+bool ledsOn = true;
 
 bool fan = false;
 
@@ -64,6 +68,7 @@ void setup()
     lastMsg = millis();
     pixels.begin();
     pixels.setColor(3,6,8);
+    pixels.setNumber(100);
    // wifiMQTT.setup();
 }
 
@@ -72,6 +77,17 @@ void loop() {
    // TODO: every now and then shut down the leds, measure the light and shut down until is dark (configurable?)
    // Serial.print("LDR:");
    // Serial.println(analogRead(PIN_LDR));
+   if (millis() - lastLdrTime > ldrInterval) {
+       pixels.setColor(0, 0, 0);
+       pixels.setNumber(0);
+       ledsOn = false;
+       if (millis() - lastLdrTime > ldrInterval + 2000) {
+           Serial.print("LDR:");
+           Serial.println(analogRead(PIN_LDR));
+           ledsOn = analogRead(PIN_LDR) > 500;
+           lastLdrTime = millis();
+       }
+   }
 
    //TODO: delete, just to test number encoding to leds
    /*unsigned long absTime = millis();
@@ -125,8 +141,11 @@ void loop() {
         Serial.print("New sensor value:");
         Serial.println(String(pm2_5).c_str());
 
-        pixels.setColor(min(50, pm2_5/10), 50 - pm2_5/20, pm2_5 <= 200 ? 20 - pm2_5/10 : 0);
-        pixels.setNumber(pm2_5/10);
+        // for some reason on first startup the sensor reads a wrong value > 1000
+        if (ledsOn && pm2_5 <= 1000) {
+            pixels.setColor(min(50, pm2_5/10), 50 - pm2_5/20, pm2_5 <= 200 ? 20 - pm2_5/10 : 0);
+            pixels.setNumber(pm2_5/10);
+        }
         
     //   std::shared_ptr<PubSubClient> client = wifiMQTT.ensureMqttClientConnected();
     //   client->loop();
