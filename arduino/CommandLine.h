@@ -20,22 +20,9 @@
 #pragma once
 
 #include <Arduino.h>
+#include "Tokenizer.h"
+#include "WifiMQTTManager.h"
 
-class Tokenizer {
-public:
-    Tokenizer();
-    ~Tokenizer();
+void showHelp();
 
-    bool tokenizeFromSerial();
-    bool tokensReady() const;
-    int numTokens() const;
-    String operator [] (int);
-
-private:
-    void pushToken();
-    String m_partialToken="";  // Initialised to nothing.
-    char **m_tokens;
-    int m_tokensSoFar = 0;
-    int m_numTokens = 0;
-    bool m_tokensReady = false;
-};
+void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager);

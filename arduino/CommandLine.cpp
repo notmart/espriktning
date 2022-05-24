@@ -16,26 +16,24 @@
  *   Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-
-#pragma once
-
+ 
 #include <Arduino.h>
+#include "CommandLine.h"
 
-class Tokenizer {
-public:
-    Tokenizer();
-    ~Tokenizer();
+void showHelp()
+{
+    Serial.println("Commands:");
+    Serial.println("help            Shows this help");
+    Serial.println("factoryreset    forgets wifi and other settings, starts as new");
+}
 
-    bool tokenizeFromSerial();
-    bool tokensReady() const;
-    int numTokens() const;
-    String operator [] (int);
-
-private:
-    void pushToken();
-    String m_partialToken="";  // Initialised to nothing.
-    char **m_tokens;
-    int m_tokensSoFar = 0;
-    int m_numTokens = 0;
-    bool m_tokensReady = false;
-};
+void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager)
+{
+    if (tokenizer.numTokens() == 1) {
+        if (tokenizer[0] == "help") {
+            showHelp();
+        } else if  (tokenizer[0] == "factoryreset") {
+            manager.factoryReset();
+        }
+    }
+}

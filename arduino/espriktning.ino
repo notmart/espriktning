@@ -23,6 +23,7 @@
 #include "SegmentPixels.h"
 #include "Tokenizer.h"
 #include "WifiMQTTManager.h"
+#include "CommandLine.h"
 #include "pm1006.h"
 
 #define PIN_PM1006_RX  5 //D1
@@ -92,7 +93,7 @@ void loop() {
    //TODO: delete, just to test number encoding to leds
    /*unsigned long absTime = millis();
    if (absTime - lastNumUp > 1000) {
-       pixels.setColor(min(50, num/10), 50 - num/20, num <= 200 ? 20 - num/10 : 0);
+       pixels.setColor(max(0, (num-100)/20), max(0, 25-(num-20)/20), num <= 100 ? 10 - num/10 : 0);
        pixels.setNumber(num/10);
        //Serial.println(num);
 
@@ -100,22 +101,25 @@ void loop() {
 
        //delay(500);return;
    } else {
-       pixels.updateAnimation(absTime);
+       pixels.updateAnimation();
    }*/
+
 
 
     // TODO: parse some commands form the tokenizer
     if (tokenizer.tokenizeFromSerial()) {
-        Serial.print("Tokens: ");
+       /*Serial.print("Tokens: ");
         Serial.println(tokenizer.numTokens());
         for (int i = 0; i < tokenizer.numTokens(); ++i) {
             Serial.print(i);
             Serial.print(": ");
             Serial.println(tokenizer[i]);
-        }
+        }*/
         //num = tokenizer[0].toInt();
+        parseCommand(tokenizer, wifiMQTT);
     }
 
+    // flash/factory reset button
     if (digitalRead(0) == 0) {
         if (factoryResetButtonDownTime == 0) {
             factoryResetButtonDownTime = millis();
@@ -143,8 +147,12 @@ void loop() {
 
         // for some reason on first startup the sensor reads a wrong value > 1000
         if (ledsOn && pm2_5 <= 1000) {
-            pixels.setColor(min(50, pm2_5/10), 50 - pm2_5/20, pm2_5 <= 200 ? 20 - pm2_5/10 : 0);
-            pixels.setNumber(pm2_5/10);
+            int num = pm2_5/10;
+            pixels.setColor(
+                max(0, (num - 100) / 20),
+                max(0, 25 - (num - 20) / 20),
+                num <= 15 ? 15 - num : 0);
+            pixels.setNumber(num);
         }
         
     //   std::shared_ptr<PubSubClient> client = wifiMQTT.ensureMqttClientConnected();

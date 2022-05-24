@@ -1,3 +1,6 @@
+// Copyright (c) 2021 Bertrik Sikken MIT license
+// https://github.com/bertrik/pm1006
+
 #include <Arduino.h>
 
 #include <stdbool.h>
@@ -46,4 +49,3 @@ public:
     bool read_pm25(uint16_t *pm);
 
 };
-

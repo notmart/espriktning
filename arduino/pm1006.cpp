@@ -1,3 +1,6 @@
+// Copyright (c) 2021 Bertrik Sikken MIT license
+// https://github.com/bertrik/pm1006
+
 #include <Arduino.h>
 
 #include <stdbool.h>
@@ -112,4 +115,3 @@ bool PM1006::process_rx(uint8_t c)
     }
     return false;
 }
-
