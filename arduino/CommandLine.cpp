@@ -19,11 +19,13 @@
  
 #include <Arduino.h>
 #include "CommandLine.h"
+#include "Settings.h"
 
 void showHelp()
 {
     Serial.println("Commands:");
     Serial.println("help            Shows this help");
+    Serial.println("printsettings   Prints all available settings");
     Serial.println("factoryreset    forgets wifi and other settings, starts as new");
 }
 
@@ -32,8 +34,10 @@ void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager)
     if (tokenizer.numTokens() == 1) {
         if (tokenizer[0] == "help") {
             showHelp();
-        } else if  (tokenizer[0] == "factoryreset") {
+        } else if (tokenizer[0] == "factoryreset") {
             manager.factoryReset();
+        } else if (tokenizer[0] == "printsettings") {
+            Settings::self()->printSettings();
         }
     }
 }

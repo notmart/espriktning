@@ -24,6 +24,7 @@
 #include "Tokenizer.h"
 #include "WifiMQTTManager.h"
 #include "CommandLine.h"
+#include "Settings.h"
 #include "pm1006.h"
 
 #define PIN_PM1006_RX  5 //D1
@@ -70,6 +71,7 @@ void setup()
     pixels.begin();
     pixels.setColor(3,6,8);
     pixels.setNumber(100);
+    Settings::self()->load();
    // wifiMQTT.setup();
 }
 

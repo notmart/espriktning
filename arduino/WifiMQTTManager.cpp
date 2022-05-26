@@ -76,7 +76,7 @@ void WifiMQTTManager::saveMQTTConfig()
 {
     Serial.println("WifiMQTTManager: saving config...");
     DynamicJsonDocument json(512);
-    json["friendly_name"] = m_mqttTopic;
+    json["mqtt_topic"] = m_mqttTopic;
     json["mqtt_server"] = m_mqttServer;
     json["mqtt_port"] = m_mqttPort;
     json["mqtt_username"] = m_mqttUsername;
@@ -125,7 +125,7 @@ void WifiMQTTManager::readMQTTConfig()
                     Serial.println(error.c_str());
                 } else {
                     Serial.println("\nWifiMQTTManager: parsed json...");
-                    strcpy(m_mqttTopic, json["friendly_name"]);
+                    strcpy(m_mqttTopic, json["mqtt_topic"]);
                     strcpy(m_mqttServer, json["mqtt_server"]);
                     strcpy(m_mqttPort, json["mqtt_port"]);
                     strcpy(m_mqttUsername, json["mqtt_username"]);
