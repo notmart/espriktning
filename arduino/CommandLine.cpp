@@ -24,9 +24,20 @@
 void showHelp()
 {
     Serial.println("Commands:");
-    Serial.println("help            Shows this help");
-    Serial.println("printsettings   Prints all available settings");
-    Serial.println("factoryreset    forgets wifi and other settings, starts as new");
+    Serial.println("help                  Shows this help");
+    Serial.println("printsettings         Prints all available settings");
+    Serial.println("get config_key        Prints the value of the given config key");
+    Serial.println("get config_key value  Sets the value of the given config key to the given value");
+    Serial.println("factoryreset          Forgets wifi and other settings, starts as new");
+}
+
+bool isNumber(const String &string) {
+    for (int i = 0; i < string.length(); ++i) {
+        if (!isDigit(string[i])) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager)
@@ -39,5 +50,77 @@ void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager)
         } else if (tokenizer[0] == "printsettings") {
             Settings::self()->printSettings();
         }
+    } else if (tokenizer.numTokens() == 2 && tokenizer[0] == "get") {
+        const String key = tokenizer[1];
+        if (tokenizer[1] == "use_wifi") {
+            Serial.println(Settings::self()->useWifi() ? "true" : "false");
+        } else if (key == "led_intensity_at_day") {
+            Serial.println(Settings::self()->ledIntensityAtDay());
+        } else if (key == "led_intensity_at_night") {
+            Serial.println(Settings::self()->ledIntensityAtNight());
+        } else if (key == "mqtt_topic") {
+            Serial.println(Settings::self()->mqttTopic());
+        } else if (key == "mqtt_server") {
+            Serial.println(Settings::self()->mqttServer());
+        } else if (key == "mqtt_port") {
+            Serial.println(Settings::self()->mqttPort());
+        } else if (key == "mqtt_user_name") {
+            Serial.println(Settings::self()->mqttUserName());
+        } else if (key == "mqtt_password") {
+            Serial.println(Settings::self()->mqttPassword());
+        } else {
+            Serial.print("Invalid configuration key: ");
+            Serial.println(key);
+        }
+    } else if (tokenizer.numTokens() == 3 && tokenizer[0] == "set") {
+        const String key = tokenizer[1];
+        const String val = tokenizer[2];
+        if (tokenizer[1] == "use_wifi") {
+            if (val == "true") {
+                Settings::self()->setUseWifi(true);
+            } else if (val == "false") {
+                Settings::self()->setUseWifi(false);
+            } else {
+                Serial.println("Expected: set use_wifi [true|false]");
+            }
+        } else if (key == "led_intensity_at_day") {
+            if (!isNumber(val)) {
+                Serial.println("Expected: set led_intensity_at_day 0-100");
+            } else {
+                int intensity = val.toInt();
+                if (intensity < 0 || intensity > 100) {
+                    Serial.println("Expected: set led_intensity_at_day 0-100");
+                } else {
+                   Settings::self()->setLedIntensityAtDay(intensity);
+                }
+            }
+        } else if (key == "led_intensity_at_night") {
+            if (!isNumber(val)) {
+                Serial.println("Expected: set led_intensity_at_night 0-100");
+            } else {
+                int intensity = val.toInt();
+                if (intensity < 0 || intensity > 100) {
+                    Serial.println("Expected: set led_intensity_at_night 0-100");
+                } else {
+                   Settings::self()->setLedIntensityAtNight(intensity);
+                }
+            }
+        } else if (key == "mqtt_topic") {
+            Settings::self()->setMqttTopic(val);
+        } else if (key == "mqtt_server") {
+            Settings::self()->setMqttServer(val);
+        } else if (key == "mqtt_port") {
+            Settings::self()->setMqttPort(val);
+        } else if (key == "mqtt_user_name") {
+            Settings::self()->setMqttUserName(val);
+        } else if (key == "mqtt_password") {
+            Settings::self()->setMqttPassword(val);
+        } else {
+            Serial.print("Invalid configuration key: ");
+            Serial.println(key);
+        }
+    } else {
+        Serial.println("Syntax error, available commands are:");
+        showHelp();
     }
 }
