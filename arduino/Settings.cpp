@@ -45,22 +45,22 @@ bool Settings::isDirty() const
 void Settings::printSettings() const
 {
     Serial.print("All available settings");
-    Serial.print("Use Wifi:               ");
+    Serial.print("use_wifi:               ");
     Serial.println(m_useWifi ? "true" : "false");
-    Serial.print("Led Intensity at day:   ");
+    Serial.print("led_intensity_at_day:   ");
     Serial.println(m_ledIntensityAtDay);
-    Serial.print("Led Intensity at night: ");
+    Serial.print("led_intensity_at_night: ");
     Serial.println(m_ledIntensityAtNight);
 
-    Serial.print("MQTT Topic:             ");
+    Serial.print("mqtt_topic:             ");
     Serial.println(m_mqttTopic);
-    Serial.print("MQTT server:            ");
+    Serial.print("mqtt_server:            ");
     Serial.println(m_mqttServer);
-    Serial.print("MQTT port:              ");
+    Serial.print("mqtt_port:              ");
     Serial.println(m_mqttPort);
-    Serial.print("MQTT user name:         ");
+    Serial.print("mqtt_user_name:         ");
     Serial.println(m_mqttUserName);
-    Serial.print("MQTT password:          ");
+    Serial.print("mqtt_password:          ");
     Serial.println(m_mqttPassword);
 }
 

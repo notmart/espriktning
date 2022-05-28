@@ -53,7 +53,7 @@ bool fan = false;
 unsigned long lastNumUp = 0;
 int num = 0;
 
-WifiMQTTManager wifiMQTT("ESPriktning", "PM2.5");
+WifiMQTTManager wifiMQTT("ESPriktning");
 NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> pixelBus(SegmentPixels::numPixelsForDigits(2,3), PIN_PIXELS);
 SegmentPixels pixels(&pixelBus, 2, 3);
 Tokenizer tokenizer;
@@ -76,10 +76,9 @@ void setup()
 }
 
 void loop() {
+   Settings *s = Settings::self();
 
-   // TODO: every now and then shut down the leds, measure the light and shut down until is dark (configurable?)
-   // Serial.print("LDR:");
-   // Serial.println(analogRead(PIN_LDR));
+   // Every now and then shut down the leds, measure the light and shut down until is dark (configurable?)
    if (millis() - lastLdrTime > ldrInterval) {
        pixels.setColor(0, 0, 0);
        pixels.setNumber(0);
@@ -156,10 +155,13 @@ void loop() {
                 num <= 15 ? 15 - num : 0);
             pixels.setNumber(num);
         }
-        
-    //   std::shared_ptr<PubSubClient> client = wifiMQTT.ensureMqttClientConnected();
-    //   client->loop();
-    //   client->publish(wifiMQTT.topic(), String(pm2_5).c_str(), true);
+
+        if (s->useWifi()) {
+           // std::shared_ptr<PubSubClient> client = wifiMQTT.ensureMqttClientConnected();
+           // client->loop();
+            //client->publish(Settings::self()->mqttTopic(), String(pm2_5).c_str(), true);
+            wifiMQTT.tryPublish(Settings::self()->mqttTopic(), String(pm2_5));
+        }
     } else if (delta > fanOffTime) {
         if (fan) {
             Serial.println("turning fan off");

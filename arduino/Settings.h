@@ -58,6 +58,7 @@ public:
     String mqttServer() const;
     void setMqttServer(const String &server);
 
+    //TODO: proper type
     String mqttPort() const;
     void setMqttPort(const String &port);
 

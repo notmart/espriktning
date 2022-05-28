@@ -38,15 +38,13 @@ public:
         MQTTError = 1 << 1,
         SPIFFSError = 1 << 2
     };
-    WifiMQTTManager(char *captiveName, char *defaultTopic);
+    WifiMQTTManager(char *captiveName);
     ~WifiMQTTManager();
 
     void setup();
     void factoryReset();
 
-    std::shared_ptr<PubSubClient> ensureMqttClientConnected();
-
-    char *topic();
+    bool tryPublish(const String &topic, const String &val);
 
 protected:
     void saveMQTTConfig();
@@ -54,11 +52,6 @@ protected:
 
 private:
     char *m_captiveName;
-    char m_mqttTopic[40] = "";
-    char m_mqttServer[40] = "";
-    char m_mqttPort[6] = "1883";
-    char m_mqttUsername[40] = "";
-    char m_mqttPassword[40] = "";
 
     WiFiServer m_server;
     WiFiClient m_client;

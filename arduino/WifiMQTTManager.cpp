@@ -18,12 +18,12 @@
  */
  
 #include "WifiMQTTManager.h"
+#include "Settings.h"
 
-WifiMQTTManager::WifiMQTTManager(char *captiveName, char *defaultTopic)
+WifiMQTTManager::WifiMQTTManager(char *captiveName)
     : m_server(WiFiServer(80))
     , m_captiveName(captiveName)
 {
-    strcpy(m_mqttTopic, defaultTopic);
 }
 
 WifiMQTTManager::~WifiMQTTManager()
@@ -32,31 +32,33 @@ WifiMQTTManager::~WifiMQTTManager()
 void WifiMQTTManager::setup()
 {
     WiFiManager wifiManager;
-    WiFiManagerParameter mqttName("name", "Friendly Name", m_mqttTopic, 40);
-    WiFiManagerParameter mqttServer("server", "MQTT Server", m_mqttServer, 40);
-    WiFiManagerParameter mqttPort("port", "MQTT Port", m_mqttPort, 6);
-    WiFiManagerParameter mqttUsername("username", "mqtt username", m_mqttUsername, 40);
-    WiFiManagerParameter mqttPassword("password", "mqtt password", m_mqttPassword, 40);
+    Settings *s = Settings::self();
+    WiFiManagerParameter mqttName("name", "Friendly Name", s->mqttTopic().c_str(), 40);
+    WiFiManagerParameter mqttServer("server", "MQTT Server", s->mqttServer().c_str(), 40);
+    WiFiManagerParameter mqttPort("port", "MQTT Port", s->mqttPort().c_str(), 6);
+    WiFiManagerParameter mqttUserName("username", "mqtt username", s->mqttUserName().c_str(), 40);
+    WiFiManagerParameter mqttPassword("password", "mqtt password", s->mqttPassword().c_str(), 40);
     wifiManager.addParameter(&mqttName);
     wifiManager.addParameter(&mqttServer);
     wifiManager.addParameter(&mqttPort);
-    wifiManager.addParameter(&mqttUsername);
+    wifiManager.addParameter(&mqttUserName);
     wifiManager.addParameter(&mqttPassword);
 
     wifiManager.setSaveConfigCallback([&]() {
-        strcpy(m_mqttTopic, mqttName.getValue());
-        strcpy(m_mqttServer, mqttServer.getValue());
-        strcpy(m_mqttPort, mqttPort.getValue());
-        strcpy(m_mqttUsername, mqttUsername.getValue());
-        strcpy(m_mqttPassword, mqttPassword.getValue());
-        saveMQTTConfig();
+        Settings *s = Settings::self();
+        s->setMqttTopic(mqttName.getValue());
+        s->setMqttServer(mqttServer.getValue());
+        s->setMqttPort(mqttPort.getValue());
+        s->setMqttUserName(mqttUserName.getValue());
+        s->setMqttPassword(mqttPassword.getValue());
+        s->save();
     });
 
     wifiManager.autoConnect(m_captiveName);
     m_status = Status(m_status | Status::WifiConnected);
     Serial.println("Connected.");
 
-    readMQTTConfig();
+   // readMQTTConfig();
 }
 
 void WifiMQTTManager::factoryReset()
@@ -67,110 +69,27 @@ void WifiMQTTManager::factoryReset()
     ESP.reset();
 }
 
-char *WifiMQTTManager::topic()
-{
-    return m_mqttTopic;
-}
-
-void WifiMQTTManager::saveMQTTConfig()
-{
-    Serial.println("WifiMQTTManager: saving config...");
-    DynamicJsonDocument json(512);
-    json["mqtt_topic"] = m_mqttTopic;
-    json["mqtt_server"] = m_mqttServer;
-    json["mqtt_port"] = m_mqttPort;
-    json["mqtt_username"] = m_mqttUsername;
-    json["mqtt_password"] = m_mqttPassword;
-
-    if (SPIFFS.begin()) {
-        Serial.println("WifiMQTTManager: mounted file system...");
-        File configFile = SPIFFS.open("/config.json", "w");
-        if (!configFile) {
-            Serial.println("WifiMQTTManager: failed to open config file for writing...");
-            m_error = Error::SPIFFSError;
-            factoryReset();
-            return;
-        }
-        serializeJson(json, configFile);
-        serializeJsonPretty(json, Serial);
-        Serial.println("");
-        Serial.println("WifiMQTTManager: config.json saved.");
-        configFile.close();
-    } else {
-        m_error = Error::SPIFFSError;
-        Serial.println("WifiMQTTManager: failed to mount FS");
-        Serial.println("WifiMQTTManager: formating FS...re-upload to try again...");
-        factoryReset();
-    }
-}
-
-void WifiMQTTManager::readMQTTConfig()
-{
-    Serial.println("WifiMQTTManager: mounting SPIFFS...");
-    if (SPIFFS.begin()) {
-        Serial.println("WifiMQTTManager: mounted file system...");
-        if (SPIFFS.exists("/config.json")) {
-            //file exists, reading and loading
-            Serial.println("WifiMQTTManager: reading config file...");
-            File configFile = SPIFFS.open("/config.json", "r");
-            if (configFile) {
-                Serial.println("WifiMQTTManager: opened config file...");
-                size_t size = configFile.size();
-
-                DynamicJsonDocument json(512);
-                DeserializationError error = deserializeJson(json, configFile);
-                if (error) {
-                    m_error = Error::MQTTError;
-                    Serial.print("WifiMQTTManager: failed to load json config: ");
-                    Serial.println(error.c_str());
-                } else {
-                    Serial.println("\nWifiMQTTManager: parsed json...");
-                    strcpy(m_mqttTopic, json["mqtt_topic"]);
-                    strcpy(m_mqttServer, json["mqtt_server"]);
-                    strcpy(m_mqttPort, json["mqtt_port"]);
-                    strcpy(m_mqttUsername, json["mqtt_username"]);
-                    strcpy(m_mqttPassword, json["mqtt_password"]);
-                    m_status = Status(m_status | Status::MQTTHasCredentials);
-
-                    Serial.println(m_mqttTopic);
-                    Serial.println(m_mqttServer);
-                    Serial.println(m_mqttPort);
-                    Serial.println(m_mqttUsername);
-                    Serial.println(m_mqttPassword);
-                }
-            } else {
-                m_error = Error::MQTTError;
-                Serial.println("WifiMQTTManager: cannot open config.json for reading, performing factory reset...");
-                factoryReset();
-            }
-        } else {
-            m_error = Error::MQTTError;
-            Serial.println("WifiMQTTManager: could not find config file, performing factory reset...");
-            factoryReset();
-        }
-
-    } else {
-        m_error = Error::SPIFFSError;
-        Serial.println("WifiMQTTManager: failed to mount FS");
-        Serial.println("WifiMQTTManager: performing factory reset...");
-        factoryReset();
-    }
-}
-
-std::shared_ptr<PubSubClient> WifiMQTTManager::ensureMqttClientConnected()
+bool WifiMQTTManager::tryPublish(const String &topic, const String &val)
 {
     if (WiFi.status() != WL_CONNECTED) {
         setup();
     }
+
+    Settings *s = Settings::self();
+
     if (!m_pubSubClient) {
         m_pubSubClient.reset(new PubSubClient(m_client));
-        const unsigned short port = (unsigned short) strtoul(m_mqttPort, NULL, 0);
-        m_pubSubClient->setServer(m_mqttServer, port);
+        const unsigned short port = (unsigned short)s->mqttPort().toInt();
+        m_pubSubClient->setServer(s->mqttServer().c_str(), port);
     }
-    while (!m_pubSubClient->connected()) {
+
+    int attempts = 0;
+
+    while (attempts < 5 || !m_pubSubClient->connected()) {
+        ++attempts;
         Serial.print("Attempting MQTT connection...");
         // Attempt to connect
-        if (m_pubSubClient->connect(m_mqttTopic, m_mqttUsername, m_mqttPassword)) {
+        if (m_pubSubClient->connect(topic.c_str(), s->mqttUserName().c_str(), s->mqttPassword().c_str())) {
             Serial.println("MQTT connected");
         } else {
             Serial.print("failed:");
@@ -180,5 +99,13 @@ std::shared_ptr<PubSubClient> WifiMQTTManager::ensureMqttClientConnected()
             delay(5000);
         }
     }
-    return m_pubSubClient;
+
+    if (m_pubSubClient->connected()) {
+        m_pubSubClient->loop();
+        m_pubSubClient->publish(topic.c_str(), val.c_str(), true);
+        return true;
+    } else {
+        Serial.println("Server not responding: giving up");
+        return false;
+    }
 }
