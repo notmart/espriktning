@@ -69,6 +69,24 @@ void WifiMQTTManager::factoryReset()
     ESP.reset();
 }
 
+String WifiMQTTManager::getWifiSSID() const
+{
+    WiFiManager wifiManager;
+    return wifiManager.getWiFiSSID();
+}
+
+String WifiMQTTManager::getWifiPass() const
+{
+    WiFiManager wifiManager;
+    return wifiManager.getWiFiPass();
+}
+
+void WifiMQTTManager::connectWifi(String ssid, String pass)
+{
+    WiFiManager wifiManager;
+    wifiManager.autoConnect(ssid.c_str(), pass.c_str());
+}
+
 bool WifiMQTTManager::tryPublish(const String &topic, const String &val)
 {
     if (WiFi.status() != WL_CONNECTED) {

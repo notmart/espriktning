@@ -24,11 +24,14 @@
 void showHelp()
 {
     Serial.println("Commands:");
-    Serial.println("help                  Shows this help");
-    Serial.println("printsettings         Prints all available settings");
-    Serial.println("get config_key        Prints the value of the given config key");
-    Serial.println("get config_key value  Sets the value of the given config key to the given value");
-    Serial.println("factoryreset          Forgets wifi and other settings, starts as new");
+    Serial.println("help                   Shows this help");
+    Serial.println("printwifisettings      Prints SSID and password of the current wifi connection");
+    //Serial.println("connectwifi SSID pass  Attempts to connect to a new wifi network");
+    Serial.println("testnumber  num        Tests the number and color animation with the given 0-99 number");
+    Serial.println("printsettings          Prints all available settings");
+    Serial.println("get config_key         Prints the value of the given config key");
+    Serial.println("get config_key value   Sets the value of the given config key to the given value");
+    Serial.println("factoryreset           Forgets wifi and other settings, starts as new");
 }
 
 bool isNumber(const String &string) {
@@ -40,7 +43,7 @@ bool isNumber(const String &string) {
     return true;
 }
 
-void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager)
+void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager, SegmentPixels &pixels)
 {
     if (tokenizer.numTokens() == 1) {
         if (tokenizer[0] == "help") {
@@ -49,7 +52,19 @@ void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager)
             manager.factoryReset();
         } else if (tokenizer[0] == "printsettings") {
             Settings::self()->printSettings();
+        } else if (tokenizer[0] == "printwifisettings") {
+            Serial.print("SSID: ");
+            Serial.println(manager.getWifiSSID());
+            Serial.print("Pass: ");
+            Serial.println(manager.getWifiPass());
         }
+    } else if (tokenizer.numTokens() == 2 && tokenizer[0] == "testnumber") {
+        const String numStr = tokenizer[1];
+        if (!isNumber(numStr)) {
+            Serial.println("Number expected");
+            return;
+        }
+        pixels.setPM25ColorNumber(numStr.toInt());
     } else if (tokenizer.numTokens() == 2 && tokenizer[0] == "get") {
         const String key = tokenizer[1];
         if (tokenizer[1] == "use_wifi") {
@@ -119,6 +134,11 @@ void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager)
             Serial.print("Invalid configuration key: ");
             Serial.println(key);
         }
+    } else if (tokenizer.numTokens() == 3 && tokenizer[0] == "connectwifi") {
+        //FIXME: find a way
+        /*const String ssid = tokenizer[1];
+        const String pass = tokenizer[2];
+        manager.connectWifi(ssid, pass);*/
     } else {
         Serial.println("Syntax error, available commands are:");
         showHelp();

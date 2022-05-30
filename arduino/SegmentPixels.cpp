@@ -166,3 +166,13 @@ void SegmentPixels::setColor(uint8_t r, uint8_t g, uint8_t b)
     m_blue = b;
     m_animStarted = millis();
 }
+
+void SegmentPixels::setPM25ColorNumber(int number)
+{
+    const int num = max(0, min(99, number));
+    setColor(
+        max(0, (num - 20) / 2),
+        max(0, 40 - num),
+        num <= 15 ? 15 - num : 0);
+    setNumber(num);
+}

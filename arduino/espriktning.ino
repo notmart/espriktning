@@ -50,9 +50,6 @@ bool ledsOn = true;
 
 bool fan = false;
 
-unsigned long lastNumUp = 0;
-int num = 0;
-
 WifiMQTTManager wifiMQTT("ESPriktning");
 NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> pixelBus(SegmentPixels::numPixelsForDigits(2,3), PIN_PIXELS);
 SegmentPixels pixels(&pixelBus, 2, 3);
@@ -72,7 +69,9 @@ void setup()
     pixels.setColor(3,6,8);
     pixels.setNumber(100);
     Settings::self()->load();
-   // wifiMQTT.setup();
+    if (Settings::self()->useWifi()) {
+        wifiMQTT.setup();
+    }
 }
 
 void loop() {
@@ -91,33 +90,13 @@ void loop() {
        }
    }
 
-   //TODO: delete, just to test number encoding to leds
-   /*unsigned long absTime = millis();
-   if (absTime - lastNumUp > 1000) {
-       pixels.setColor(max(0, (num-100)/20), max(0, 25-(num-20)/20), num <= 100 ? 10 - num/10 : 0);
-       pixels.setNumber(num/10);
-       //Serial.println(num);
-
-       lastNumUp = absTime;
-
-       //delay(500);return;
-   } else {
-       pixels.updateAnimation();
-   }*/
-
-
-
     // TODO: parse some commands form the tokenizer
     if (tokenizer.tokenizeFromSerial()) {
-       /*Serial.print("Tokens: ");
-        Serial.println(tokenizer.numTokens());
-        for (int i = 0; i < tokenizer.numTokens(); ++i) {
-            Serial.print(i);
-            Serial.print(": ");
-            Serial.println(tokenizer[i]);
-        }*/
-        //num = tokenizer[0].toInt();
-        parseCommand(tokenizer, wifiMQTT);
+        parseCommand(tokenizer, wifiMQTT, pixels);
+    }
+
+    if (s->isDirty()) {
+        s->save();
     }
 
     // flash/factory reset button
@@ -138,22 +117,16 @@ void loop() {
         printf("Attempting measurement:\n");
         uint16_t pm2_5;
         if (pm1006.read_pm25(&pm2_5)) {
-            printf("PM2.5 = %u\n", pm2_5);
+            Serial.print("New sensor value:");
+            Serial.println(String(pm2_5).c_str());
         } else {
-            printf("Measurement failed!\n");
+            Serial.println("Measurement failed");
         }
 
-        Serial.print("New sensor value:");
-        Serial.println(String(pm2_5).c_str());
-
-        // for some reason on first startup the sensor reads a wrong value > 1000
+        // for some reason first time after startup the sensor reads a wrong value > 1000
         if (ledsOn && pm2_5 <= 1000) {
-            int num = pm2_5/10;
-            pixels.setColor(
-                max(0, (num - 100) / 20),
-                max(0, 25 - (num - 20) / 20),
-                num <= 15 ? 15 - num : 0);
-            pixels.setNumber(num);
+            const int num = round(double(pm2_5)/10);
+            pixels.setPM25ColorNumber(num);
         }
 
         if (s->useWifi()) {

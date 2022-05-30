@@ -44,6 +44,11 @@ public:
     void setup();
     void factoryReset();
 
+    String getWifiSSID() const;
+    String getWifiPass() const;
+
+    void connectWifi(String ssid, String pass);
+
     bool tryPublish(const String &topic, const String &val);
 
 protected:

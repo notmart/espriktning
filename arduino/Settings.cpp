@@ -44,7 +44,7 @@ bool Settings::isDirty() const
 
 void Settings::printSettings() const
 {
-    Serial.print("All available settings");
+    Serial.println("All available settings:");
     Serial.print("use_wifi:               ");
     Serial.println(m_useWifi ? "true" : "false");
     Serial.print("led_intensity_at_day:   ");
@@ -131,8 +131,9 @@ void Settings::load()
         return;
     }
 
-    Serial.println("Settings: opened config file...");
     size_t size = configFile.size();
+    Serial.print("Settings: opened config file, size ");
+    Serial.println(size);
 
     DynamicJsonDocument json(512);
     DeserializationError error = deserializeJson(json, configFile);
@@ -144,7 +145,7 @@ void Settings::load()
     }
 
     if (json.containsKey("use_wifi")) {
-        m_useWifi = !strcmp(json["use_wifi"], "true");
+        m_useWifi = json["use_wifi"] == "true";
     }
     if (json.containsKey("led_intensity_at_day")) {
         String numString(json["led_intensity_at_day"]);
@@ -155,19 +156,19 @@ void Settings::load()
         m_ledIntensityAtNight = min(long(100), max(long(0), numString.toInt()));
     }
 
-    if (json.containsKey("")) {
+    if (json.containsKey("mqtt_topic")) {
         m_mqttTopic = String(json["mqtt_topic"]);
     }
-    if (json.containsKey("")) {
+    if (json.containsKey("mqtt_server")) {
         m_mqttServer = String(json["mqtt_server"]);
     }
-    if (json.containsKey("")) {
+    if (json.containsKey("mqtt_port")) {
         m_mqttPort = String(json["mqtt_port"]);
     }
-    if (json.containsKey("")) {
+    if (json.containsKey("mqtt_username")) {
         m_mqttUserName = String(json["mqtt_username"]);
     }
-    if (json.containsKey("")) {
+    if (json.containsKey("mqtt_password")) {
         m_mqttPassword = String(json["mqtt_password"]);
     }
 

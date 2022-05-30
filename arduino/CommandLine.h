@@ -21,8 +21,9 @@
 
 #include <Arduino.h>
 #include "Tokenizer.h"
+#include "SegmentPixels.h"
 #include "WifiMQTTManager.h"
 
 void showHelp();
 
-void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager);
+void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager, SegmentPixels &pixels);

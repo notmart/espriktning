@@ -32,6 +32,7 @@ public:
  
     void setNumber(int number);
     void setColor(uint8_t r, uint8_t g, uint8_t b);
+    void setPM25ColorNumber(int number);
     void updateAnimation();
 
 private:
