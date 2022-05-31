@@ -29,7 +29,10 @@ public:
 
     static int numPixelsForDigits(int numDigits, int paddingPixels);
     void begin();
- 
+
+    uint16_t animationDuration() const;
+    void setAnimationDuration(uint16_t duration);
+
     void setNumber(int number);
     void setColor(uint8_t r, uint8_t g, uint8_t b);
     void setPM25ColorNumber(int number);
@@ -59,5 +62,5 @@ private:
     double m_animProgress = 0;
     unsigned long m_animStarted = 0;
     unsigned long m_lastFrame = 0;
-    uint16_t m_animDuration = 1000;
+    uint16_t m_animDuration = 500;
 };

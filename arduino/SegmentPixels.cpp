@@ -57,6 +57,16 @@ void SegmentPixels::begin()
     setNumber(m_number);
 }
 
+uint16_t SegmentPixels::animationDuration() const
+{
+    return m_animDuration;
+}
+
+void SegmentPixels::setAnimationDuration(uint16_t duration)
+{
+    m_animDuration = duration;
+}
+
 void SegmentPixels::updateAnimation()
 {
     unsigned long absTime = millis();

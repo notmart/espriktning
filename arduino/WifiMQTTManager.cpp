@@ -35,7 +35,7 @@ void WifiMQTTManager::setup()
     Settings *s = Settings::self();
     WiFiManagerParameter mqttName("name", "Friendly Name", s->mqttTopic().c_str(), 40);
     WiFiManagerParameter mqttServer("server", "MQTT Server", s->mqttServer().c_str(), 40);
-    WiFiManagerParameter mqttPort("port", "MQTT Port", s->mqttPort().c_str(), 6);
+    WiFiManagerParameter mqttPort("port", "MQTT Port", String(s->mqttPort()).c_str(), 6);
     WiFiManagerParameter mqttUserName("username", "mqtt username", s->mqttUserName().c_str(), 40);
     WiFiManagerParameter mqttPassword("password", "mqtt password", s->mqttPassword().c_str(), 40);
     wifiManager.addParameter(&mqttName);
@@ -48,7 +48,7 @@ void WifiMQTTManager::setup()
         Settings *s = Settings::self();
         s->setMqttTopic(mqttName.getValue());
         s->setMqttServer(mqttServer.getValue());
-        s->setMqttPort(mqttPort.getValue());
+        s->setMqttPort(max(long(0), min(long(65535), String(mqttPort.getValue()).toInt())));
         s->setMqttUserName(mqttUserName.getValue());
         s->setMqttPassword(mqttPassword.getValue());
         s->save();
@@ -97,7 +97,7 @@ bool WifiMQTTManager::tryPublish(const String &topic, const String &val)
 
     if (!m_pubSubClient) {
         m_pubSubClient.reset(new PubSubClient(m_client));
-        const unsigned short port = (unsigned short)s->mqttPort().toInt();
+        const unsigned short port = s->mqttPort();
         m_pubSubClient->setServer(s->mqttServer().c_str(), port);
     }
 

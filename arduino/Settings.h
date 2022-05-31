@@ -46,11 +46,14 @@ public:
     bool useWifi() const;
     void setUseWifi(bool useWifi);
 
-    int ledIntensityAtDay() const;
-    void setLedIntensityAtDay(int intensity);
+    uint16_t ledIntensityAtDay() const;
+    void setLedIntensityAtDay(uint16_t intensity);
 
-    int ledIntensityAtNight() const;
-    void setLedIntensityAtNight(int intensity);
+    uint16_t ledIntensityAtNight() const;
+    void setLedIntensityAtNight(uint16_t intensity);
+
+    uint16_t animationDuration() const;
+    void setAnimationDuration(uint16_t duration);
 
     String mqttTopic() const;
     void setMqttTopic(const String &topic);
@@ -59,8 +62,8 @@ public:
     void setMqttServer(const String &server);
 
     //TODO: proper type
-    String mqttPort() const;
-    void setMqttPort(const String &port);
+    uint16_t mqttPort() const;
+    void setMqttPort(uint16_t port);
 
     String mqttUserName() const;
     void setMqttUserName(const String &userName);
@@ -72,12 +75,13 @@ private:
     static Settings *s_settings;
 
     bool m_useWifi = true;
-    int m_ledIntensityAtDay = 100;
-    int m_ledIntensityAtNight = 0;
+    uint16_t m_ledIntensityAtDay = 100;
+    uint16_t m_ledIntensityAtNight = 0;
+    uint16_t m_animationDuration = 500;
 
     String m_mqttTopic;
     String m_mqttServer;
-    String m_mqttPort;
+    uint16_t m_mqttPort = 1883;
     String m_mqttUserName;
     String m_mqttPassword;
 

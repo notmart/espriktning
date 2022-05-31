@@ -38,7 +38,7 @@ static PM1006 pm1006(&pmSerial);
 
 unsigned long factoryResetButtonDownTime = 0;
 
-unsigned long lastMsg = 0;
+unsigned long lastCycleTime = 0;
 
 static const uint fanOnTime = 0;
 static const uint fanOffTime = 20000;
@@ -64,17 +64,23 @@ void setup()
     pinMode(PIN_LDR, INPUT);
 
     pmSerial.begin(PM1006::BIT_RATE);
-    lastMsg = millis();
+
+    Settings *s = Settings::self();
+    s->load();
+
+    lastCycleTime = millis();
     pixels.begin();
+    pixels.setAnimationDuration(s->animationDuration());
     pixels.setColor(3,6,8);
     pixels.setNumber(100);
-    Settings::self()->load();
-    if (Settings::self()->useWifi()) {
+ 
+    if (s->useWifi()) {
         wifiMQTT.setup();
     }
 }
 
-void loop() {
+void loop()
+{
    Settings *s = Settings::self();
 
    // Every now and then shut down the leds, measure the light and shut down until is dark (configurable?)
@@ -95,6 +101,7 @@ void loop() {
         parseCommand(tokenizer, wifiMQTT, pixels);
     }
 
+    // Commandline may have modified settings
     if (s->isDirty()) {
         s->save();
     }
@@ -110,9 +117,9 @@ void loop() {
         factoryResetButtonDownTime = 0;
     }
 
-    long delta = millis() - lastMsg;
+    long delta = millis() - lastCycleTime;
     if (delta > measurementTime) {
-        lastMsg = millis();
+        lastCycleTime = millis();
 
         printf("Attempting measurement:\n");
         uint16_t pm2_5;

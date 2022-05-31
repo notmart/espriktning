@@ -26,7 +26,6 @@ Settings *Settings::s_settings = new Settings();
 
 Settings::Settings()
     : m_mqttTopic("PM2_5")
-    , m_mqttPort("1883")
 {}
 
 Settings::~Settings()
@@ -51,6 +50,8 @@ void Settings::printSettings() const
     Serial.println(m_ledIntensityAtDay);
     Serial.print("led_intensity_at_night: ");
     Serial.println(m_ledIntensityAtNight);
+    Serial.print("animation_duration: ");
+    Serial.println(m_animationDuration);
 
     Serial.print("mqtt_topic:             ");
     Serial.println(m_mqttTopic);
@@ -68,6 +69,7 @@ void Settings::save()
 {
     DynamicJsonDocument json(512);
     json["use_wifi"] = m_useWifi;
+    json["animation_duration"] = m_animationDuration;
     json["led_intensity_at_day"] = m_ledIntensityAtDay;
     json["led_intensity_at_night"] = m_ledIntensityAtNight;
 
@@ -155,6 +157,10 @@ void Settings::load()
         String numString(json["led_intensity_at_night"]);
         m_ledIntensityAtNight = min(long(100), max(long(0), numString.toInt()));
     }
+    if (json.containsKey("animation_duration")) {
+        String numString(json["animation_duration"]);
+        m_animationDuration = min(long(3000), max(long(0), numString.toInt()));
+    }
 
     if (json.containsKey("mqtt_topic")) {
         m_mqttTopic = String(json["mqtt_topic"]);
@@ -163,7 +169,8 @@ void Settings::load()
         m_mqttServer = String(json["mqtt_server"]);
     }
     if (json.containsKey("mqtt_port")) {
-        m_mqttPort = String(json["mqtt_port"]);
+        String numString(json["mqtt_port"]);
+        m_mqttPort = max(long(0), min(long(65535), numString.toInt()));
     }
     if (json.containsKey("mqtt_username")) {
         m_mqttUserName = String(json["mqtt_username"]);
@@ -192,12 +199,12 @@ void Settings::setUseWifi(bool useWifi)
     m_dirty = true;
 }
 
-int Settings::ledIntensityAtDay() const
+uint16_t Settings::ledIntensityAtDay() const
 {
     return m_ledIntensityAtDay;
 }
 
-void Settings::setLedIntensityAtDay(int intensity)
+void Settings::setLedIntensityAtDay(uint16_t intensity)
 {
     if (m_ledIntensityAtDay == intensity) {
         return;
@@ -207,18 +214,34 @@ void Settings::setLedIntensityAtDay(int intensity)
     m_dirty = true;
 }
 
-int Settings::ledIntensityAtNight() const
+uint16_t Settings::ledIntensityAtNight() const
 {
     return m_ledIntensityAtNight;
 }
 
-void Settings::setLedIntensityAtNight(int intensity)
+void Settings::setLedIntensityAtNight(uint16_t intensity)
 {
     if (m_ledIntensityAtNight == intensity) {
         return;
     }
 
     m_ledIntensityAtNight = intensity;
+    m_dirty = true;
+}
+
+
+uint16_t Settings::animationDuration() const
+{
+    return m_ledIntensityAtNight;
+}
+
+void Settings::setAnimationDuration(uint16_t duration)
+{
+    if (m_animationDuration == duration) {
+        return;
+    }
+
+    m_animationDuration = duration;
     m_dirty = true;
 }
 
@@ -252,12 +275,12 @@ void Settings::setMqttServer(const String &server)
     m_dirty = true;
 }
 
-String Settings::mqttPort() const
+uint16_t Settings::mqttPort() const
 {
     return m_mqttPort;
 }
 
-void Settings::setMqttPort(const String &port)
+void Settings::setMqttPort(uint16_t port)
 {
     if (m_mqttPort == port) {
         return;

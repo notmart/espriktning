@@ -73,6 +73,8 @@ void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager, SegmentPixels 
             Serial.println(Settings::self()->ledIntensityAtDay());
         } else if (key == "led_intensity_at_night") {
             Serial.println(Settings::self()->ledIntensityAtNight());
+        } else if (key == "animation_duration") {
+            Serial.println(Settings::self()->animationDuration());
         } else if (key == "mqtt_topic") {
             Serial.println(Settings::self()->mqttTopic());
         } else if (key == "mqtt_server") {
@@ -120,12 +122,33 @@ void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager, SegmentPixels 
                    Settings::self()->setLedIntensityAtNight(intensity);
                 }
             }
+        } else if (key == "animation_duration") {
+            if (!isNumber(val)) {
+                Serial.println("Expected: set animation_duration 0-4000");
+            } else {
+                int duration = val.toInt();
+                if (duration < 0 || duration > 4000) {
+                    Serial.println("Expected: set animation_duration 0-4000");
+                } else {
+                   Settings::self()->setAnimationDuration(duration);
+                   pixels.setAnimationDuration(duration);
+                }
+            }
         } else if (key == "mqtt_topic") {
             Settings::self()->setMqttTopic(val);
         } else if (key == "mqtt_server") {
             Settings::self()->setMqttServer(val);
         } else if (key == "mqtt_port") {
-            Settings::self()->setMqttPort(val);
+            if (!isNumber(val)) {
+                Serial.println("Expected: set mqtt_port 1-65535");
+            } else {
+                int port = val.toInt();
+                if (port < 0 || port > 65535) {
+                    Serial.println("Expected: set mqtt_port 0-65535");
+                } else {
+                   Settings::self()->setMqttPort(port);
+                }
+            }
         } else if (key == "mqtt_user_name") {
             Settings::self()->setMqttUserName(val);
         } else if (key == "mqtt_password") {
