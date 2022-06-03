@@ -44,8 +44,8 @@ public:
     void setup();
     void factoryReset();
 
-    String getWifiSSID() const;
-    String getWifiPass() const;
+    String getWifiSSID();
+    String getWifiPass();
 
     void connectWifi(String ssid, String pass);
 
@@ -58,7 +58,7 @@ protected:
 private:
     char *m_captiveName;
 
-    WiFiServer m_server;
+    WiFiManager m_wifiManager;
     WiFiClient m_client;
     std::shared_ptr<PubSubClient> m_pubSubClient;
     Status m_status = Status::None;

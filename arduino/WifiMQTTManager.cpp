@@ -21,8 +21,7 @@
 #include "Settings.h"
 
 WifiMQTTManager::WifiMQTTManager(char *captiveName)
-    : m_server(WiFiServer(80))
-    , m_captiveName(captiveName)
+    : m_captiveName(captiveName)
 {
 }
 
@@ -31,20 +30,19 @@ WifiMQTTManager::~WifiMQTTManager()
 
 void WifiMQTTManager::setup()
 {
-    WiFiManager wifiManager;
     Settings *s = Settings::self();
     WiFiManagerParameter mqttName("name", "Friendly Name", s->mqttTopic().c_str(), 40);
     WiFiManagerParameter mqttServer("server", "MQTT Server", s->mqttServer().c_str(), 40);
     WiFiManagerParameter mqttPort("port", "MQTT Port", String(s->mqttPort()).c_str(), 6);
     WiFiManagerParameter mqttUserName("username", "mqtt username", s->mqttUserName().c_str(), 40);
     WiFiManagerParameter mqttPassword("password", "mqtt password", s->mqttPassword().c_str(), 40);
-    wifiManager.addParameter(&mqttName);
-    wifiManager.addParameter(&mqttServer);
-    wifiManager.addParameter(&mqttPort);
-    wifiManager.addParameter(&mqttUserName);
-    wifiManager.addParameter(&mqttPassword);
+    m_wifiManager.addParameter(&mqttName);
+    m_wifiManager.addParameter(&mqttServer);
+    m_wifiManager.addParameter(&mqttPort);
+    m_wifiManager.addParameter(&mqttUserName);
+    m_wifiManager.addParameter(&mqttPassword);
 
-    wifiManager.setSaveConfigCallback([&]() {
+    m_wifiManager.setSaveConfigCallback([&]() {
         Settings *s = Settings::self();
         s->setMqttTopic(mqttName.getValue());
         s->setMqttServer(mqttServer.getValue());
@@ -54,7 +52,27 @@ void WifiMQTTManager::setup()
         s->save();
     });
 
-    wifiManager.autoConnect(m_captiveName);
+    // Workaround https://github.com/tzapu/WiFiManager/issues/1065
+
+    m_wifiManager.setConnectTimeout(2);
+    int attempt = 0;
+    Serial.print("Connecting to wifi: ");
+    Serial.print(m_wifiManager.getWiFiSSID());
+    Serial.print(" ");
+    Serial.println(m_wifiManager.getWiFiPass());
+
+    bool ret = WiFi.begin(m_wifiManager.getWiFiSSID(), m_wifiManager.getWiFiPass(), 0, NULL, true);
+    while(attempt < 30 && !WiFi.isConnected() && m_wifiManager.getWiFiSSID().length() > 0) {
+        ++attempt;
+        //bool ret = WiFi.begin(m_wifiManager.getWiFiSSID(), m_wifiManager.getWiFiPass(), 0, NULL, true);
+        Serial.print(WiFi.status());
+        Serial.println(".");
+        delay(500);
+    }
+
+    if (!WiFi.isConnected()) {
+        m_wifiManager.autoConnect(m_captiveName);
+    }
     m_status = Status(m_status | Status::WifiConnected);
     Serial.println("Connected.");
 
@@ -63,28 +81,25 @@ void WifiMQTTManager::setup()
 
 void WifiMQTTManager::factoryReset()
 {
-    WiFiManager wifiManager;
-    wifiManager.resetSettings();
+    m_wifiManager.resetSettings();
     SPIFFS.format();
     ESP.reset();
 }
 
-String WifiMQTTManager::getWifiSSID() const
+String WifiMQTTManager::getWifiSSID()
 {
-    WiFiManager wifiManager;
-    return wifiManager.getWiFiSSID();
+    return m_wifiManager.getWiFiSSID();
 }
 
-String WifiMQTTManager::getWifiPass() const
+String WifiMQTTManager::getWifiPass()
 {
-    WiFiManager wifiManager;
-    return wifiManager.getWiFiPass();
+    return m_wifiManager.getWiFiPass();
 }
 
 void WifiMQTTManager::connectWifi(String ssid, String pass)
 {
-    WiFiManager wifiManager;
-    wifiManager.autoConnect(ssid.c_str(), pass.c_str());
+    m_wifiManager.setConnectTimeout(2);
+    m_wifiManager.autoConnect(ssid.c_str(), pass.c_str());
 }
 
 bool WifiMQTTManager::tryPublish(const String &topic, const String &val)
@@ -97,16 +112,20 @@ bool WifiMQTTManager::tryPublish(const String &topic, const String &val)
 
     if (!m_pubSubClient) {
         m_pubSubClient.reset(new PubSubClient(m_client));
-        const unsigned short port = s->mqttPort();
-        m_pubSubClient->setServer(s->mqttServer().c_str(), port);
     }
+       
 
+    m_pubSubClient->setServer(s->mqttServer().c_str(), s->mqttPort());
     int attempts = 0;
 
-    while (attempts < 5 || !m_pubSubClient->connected()) {
+    while (attempts < 5 && !m_pubSubClient->connected()) {
         ++attempts;
         Serial.print("Attempting MQTT connection...");
+        Serial.print(attempts);
+        Serial.print(" ");
         // Attempt to connect
+        m_client.connect(s->mqttServer().c_str(), s->mqttPort());
+        Serial.print(s->mqttUserName().c_str());Serial.print(s->mqttPassword().c_str());
         if (m_pubSubClient->connect(topic.c_str(), s->mqttUserName().c_str(), s->mqttPassword().c_str())) {
             Serial.println("MQTT connected");
         } else {
@@ -121,6 +140,8 @@ bool WifiMQTTManager::tryPublish(const String &topic, const String &val)
     if (m_pubSubClient->connected()) {
         m_pubSubClient->loop();
         m_pubSubClient->publish(topic.c_str(), val.c_str(), true);
+        // Seems to work better connecting and  disconnecting the client every time
+        m_client.stop();
         return true;
     } else {
         Serial.println("Server not responding: giving up");

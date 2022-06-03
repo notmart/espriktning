@@ -25,12 +25,13 @@ void showHelp()
 {
     Serial.println("Commands:");
     Serial.println("help                   Shows this help");
+    Serial.println("reboot                 Reboots the device");
     Serial.println("printwifisettings      Prints SSID and password of the current wifi connection");
-    //Serial.println("connectwifi SSID pass  Attempts to connect to a new wifi network");
+    Serial.println("connectwifi SSID pass  Attempts to connect to a new wifi network");
     Serial.println("testnumber  num        Tests the number and color animation with the given 0-99 number");
     Serial.println("printsettings          Prints all available settings");
     Serial.println("get config_key         Prints the value of the given config key");
-    Serial.println("get config_key value   Sets the value of the given config key to the given value");
+    Serial.println("set config_key value   Sets the value of the given config key to the given value");
     Serial.println("factoryreset           Forgets wifi and other settings, starts as new");
 }
 
@@ -50,6 +51,8 @@ void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager, SegmentPixels 
             showHelp();
         } else if (tokenizer[0] == "factoryreset") {
             manager.factoryReset();
+        } else if (tokenizer[0] == "reboot") {
+            ESP.reset();
         } else if (tokenizer[0] == "printsettings") {
             Settings::self()->printSettings();
         } else if (tokenizer[0] == "printwifisettings") {
@@ -57,6 +60,8 @@ void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager, SegmentPixels 
             Serial.println(manager.getWifiSSID());
             Serial.print("Pass: ");
             Serial.println(manager.getWifiPass());
+            Serial.print("IP:   ");
+            Serial.println(WiFi.localIP());
         }
     } else if (tokenizer.numTokens() == 2 && tokenizer[0] == "testnumber") {
         const String numStr = tokenizer[1];
@@ -159,9 +164,15 @@ void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager, SegmentPixels 
         }
     } else if (tokenizer.numTokens() == 3 && tokenizer[0] == "connectwifi") {
         //FIXME: find a way
-        /*const String ssid = tokenizer[1];
+        const String ssid = tokenizer[1];
         const String pass = tokenizer[2];
-        manager.connectWifi(ssid, pass);*/
+        WiFi.persistent(true);
+        bool ret = WiFi.begin(ssid.c_str(), pass.c_str(), 0, NULL, true);
+        if (!ret) {
+            Serial.println("[Error] wifi connection failed");
+        }
+        Serial.println(WiFi.isConnected());
+        WiFi.persistent(false);
     } else {
         Serial.println("Syntax error, available commands are:");
         showHelp();

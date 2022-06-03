@@ -36,19 +36,23 @@
 static SoftwareSerial pmSerial(PIN_PM1006_RX, PIN_PM1006_TX);
 static PM1006 pm1006(&pmSerial);
 
-unsigned long factoryResetButtonDownTime = 0;
-
-unsigned long lastCycleTime = 0;
-
 static const uint fanOnTime = 0;
 static const uint fanOffTime = 20000;
 static const uint measurementTime = 30000;
 
-static const uint ldrInterval = 120000;
-unsigned long lastLdrTime = 0;
-bool ledsOn = true;
+unsigned long factoryResetButtonDownTime = 0;
+unsigned long lastCycleTime = 0;
 
+static const uint ldrInterval = 120000;
+
+unsigned long lastLdrTime = 0;
+
+bool ledsOn = true;
 bool fan = false;
+
+
+uint16_t pm2_5 = 0;
+
 
 WifiMQTTManager wifiMQTT("ESPriktning");
 NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> pixelBus(SegmentPixels::numPixelsForDigits(2,3), PIN_PIXELS);
@@ -71,8 +75,16 @@ void setup()
     lastCycleTime = millis();
     pixels.begin();
     pixels.setAnimationDuration(s->animationDuration());
+    double intensity = double(s->ledIntensityAtDay()) / 100;
+    pixels.setLedIntensity(intensity);
+
+    ledsOn = intensity > 0;
     pixels.setColor(3,6,8);
-    pixels.setNumber(100);
+    pixels.setNumber(88);
+    for (int i = 0; i < 20; ++i) {
+      pixels.updateAnimation();
+      delay(25);
+    }
  
     if (s->useWifi()) {
         wifiMQTT.setup();
@@ -85,13 +97,24 @@ void loop()
 
    // Every now and then shut down the leds, measure the light and shut down until is dark (configurable?)
    if (millis() - lastLdrTime > ldrInterval) {
+       double intensity = double(s->ledIntensityAtNight()) / 100;
        pixels.setColor(0, 0, 0);
-       pixels.setNumber(0);
        ledsOn = false;
        if (millis() - lastLdrTime > ldrInterval + 2000) {
            Serial.print("LDR:");
            Serial.println(analogRead(PIN_LDR));
-           ledsOn = analogRead(PIN_LDR) > 500;
+           double intensity = 0.0;
+           if (analogRead(PIN_LDR) > 500) {
+               intensity = double(s->ledIntensityAtDay()) / 100;
+           } else {
+               intensity = double(s->ledIntensityAtNight()) / 100;
+           }
+           ledsOn = intensity > 0;
+           pixels.setLedIntensity(intensity);
+           if (ledsOn) {
+               const int num = round(double(pm2_5)/10);
+               pixels.setPM25ColorNumber(num);
+           }
            lastLdrTime = millis();
        }
    }
@@ -122,7 +145,6 @@ void loop()
         lastCycleTime = millis();
 
         printf("Attempting measurement:\n");
-        uint16_t pm2_5;
         if (pm1006.read_pm25(&pm2_5)) {
             Serial.print("New sensor value:");
             Serial.println(String(pm2_5).c_str());

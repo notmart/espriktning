@@ -50,7 +50,7 @@ void Settings::printSettings() const
     Serial.println(m_ledIntensityAtDay);
     Serial.print("led_intensity_at_night: ");
     Serial.println(m_ledIntensityAtNight);
-    Serial.print("animation_duration: ");
+    Serial.print("animation_duration:     ");
     Serial.println(m_animationDuration);
 
     Serial.print("mqtt_topic:             ");
@@ -68,7 +68,7 @@ void Settings::printSettings() const
 void Settings::save()
 {
     DynamicJsonDocument json(512);
-    json["use_wifi"] = m_useWifi;
+    json["use_wifi"] = m_useWifi ? "true" : "false";
     json["animation_duration"] = m_animationDuration;
     json["led_intensity_at_day"] = m_ledIntensityAtDay;
     json["led_intensity_at_night"] = m_ledIntensityAtNight;
@@ -181,6 +181,7 @@ void Settings::load()
 
     Serial.println("\nSettings: parsed json...");
     serializeJsonPretty(json, Serial);
+    Serial.println(m_animationDuration);
     m_dirty = false;
 }
 
@@ -232,7 +233,7 @@ void Settings::setLedIntensityAtNight(uint16_t intensity)
 
 uint16_t Settings::animationDuration() const
 {
-    return m_ledIntensityAtNight;
+    return m_animationDuration;
 }
 
 void Settings::setAnimationDuration(uint16_t duration)

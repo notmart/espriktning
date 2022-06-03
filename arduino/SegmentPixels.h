@@ -33,6 +33,9 @@ public:
     uint16_t animationDuration() const;
     void setAnimationDuration(uint16_t duration);
 
+    double ledIntensity() const;
+    void setLedIntensity(double intensity);
+
     void setNumber(int number);
     void setColor(uint8_t r, uint8_t g, uint8_t b);
     void setPM25ColorNumber(int number);
@@ -60,6 +63,7 @@ private:
     uint8_t m_oldBlue = 0;
 
     double m_animProgress = 0;
+    double m_ledIntensity = 1.0; // TODO
     unsigned long m_animStarted = 0;
     unsigned long m_lastFrame = 0;
     uint16_t m_animDuration = 500;

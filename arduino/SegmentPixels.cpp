@@ -57,6 +57,16 @@ void SegmentPixels::begin()
     setNumber(m_number);
 }
 
+double SegmentPixels::ledIntensity() const
+{
+    return m_ledIntensity;
+}
+
+void SegmentPixels::setLedIntensity(double intensity)
+{
+    m_ledIntensity = intensity;
+}
+
 uint16_t SegmentPixels::animationDuration() const
 {
     return m_animDuration;
@@ -92,11 +102,11 @@ void SegmentPixels::updateAnimation()
         inNewMask = m_pixelMask & (1 << i);
  
         if (inOldMask && inNewMask) {
-            dim = 1.0;
+            dim = m_ledIntensity;
         } else if (inNewMask) {
-            dim = m_animProgress;
+            dim = m_animProgress * m_ledIntensity;
         } else if (inOldMask) {
-            dim = 1.0 - m_animProgress;
+            dim = m_ledIntensity - m_animProgress * m_ledIntensity;
         } else {
             dim = 0.0;
         }
@@ -149,10 +159,8 @@ void SegmentPixels::setNumber(int number)
 
 
     for (int i = 0; i < m_numDigits - numDigits; ++i) {
-        for (int j = 0; j < 7; ++j) {
-            start++;
-            //m_pixelMask |= 1 << start++;
-        }
+         m_pixelMask |= s_segmentFlags[0] << start;
+         start += 7;
     }
     for (int i = max(0, numDigits - m_numDigits); i < numDigits; ++i) {
         m_pixelMask |= s_segmentFlags[numberArray[i]] << start;
@@ -182,7 +190,7 @@ void SegmentPixels::setPM25ColorNumber(int number)
     const int num = max(0, min(99, number));
     setColor(
         max(0, (num - 20) / 2),
-        max(0, 40 - num),
+        max(0, 42 - num),
         num <= 15 ? 15 - num : 0);
     setNumber(num);
 }
