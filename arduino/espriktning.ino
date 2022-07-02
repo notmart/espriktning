@@ -59,8 +59,19 @@ NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> pixelBus(SegmentPixel
 SegmentPixels pixels(&pixelBus, 2, 3);
 Tokenizer tokenizer;
 
+void syncPixelsAnimation()
+{
+    for (int i = 0; i < 20; ++i) {
+        pixels.updateAnimation();
+        delay(25);
+    }
+}
+
 void setup()
 {
+    enableWiFiAtBootTime();
+    WiFi.setPhyMode(WIFI_PHY_MODE_11G);
+
     Serial.begin(115200);
     // Recycle the flash button as a factory reset
     pinMode(0, INPUT_PULLUP);
@@ -81,13 +92,12 @@ void setup()
     ledsOn = intensity > 0;
     pixels.setColor(3,6,8);
     pixels.setNumber(88);
-    for (int i = 0; i < 20; ++i) {
-      pixels.updateAnimation();
-      delay(25);
-    }
+    syncPixelsAnimation();
  
     if (s->useWifi()) {
         wifiMQTT.setup();
+        pixels.setColor(10,6,5);
+        pixels.setNumber(88);
     }
 }
 
