@@ -77,6 +77,7 @@ int PM1006::build_tx(size_t cmd_len, const uint8_t *cmd_data)
 // processes one rx character, returns true if a valid frame was found
 bool PM1006::process_rx(uint8_t c)
 {
+  Serial.print(c, HEX); Serial.print(" ");
     switch (_state) {
     case PM1006_HEADER:
         _checksum = c;

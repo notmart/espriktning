@@ -123,7 +123,7 @@ void loop()
            pixels.setLedIntensity(intensity);
            if (ledsOn) {
                const int num = round(double(pm2_5)/10);
-               pixels.setPM25ColorNumber(num);
+               pixels.setPM25ColorNumber(pm2_5);
            }
            lastLdrTime = millis();
        }
@@ -164,8 +164,8 @@ void loop()
 
         // for some reason first time after startup the sensor reads a wrong value > 1000
         if (ledsOn && pm2_5 <= 1000) {
-            const int num = round(double(pm2_5)/10);
-            pixels.setPM25ColorNumber(num);
+            //onst int num = round(double(pm2_5)/10);
+            pixels.setPM25ColorNumber(pm2_5);
         }
 
         if (s->useWifi()) {
