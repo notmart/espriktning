@@ -25,7 +25,9 @@
 Settings *Settings::s_settings = new Settings();
 
 Settings::Settings()
-    : m_mqttTopic("PM2_5")
+    : m_pm2_5Topic("PM2_5")
+    , m_temperatureTopic("Temperature")
+    , m_humidityTopic("Humidity")
 {}
 
 Settings::~Settings()
@@ -53,8 +55,14 @@ void Settings::printSettings() const
     Serial.print("animation_duration:     ");
     Serial.println(m_animationDuration);
 
-    Serial.print("mqtt_topic:             ");
-    Serial.println(m_mqttTopic);
+    Serial.print("pm2_5_topic:             ");
+    Serial.println(m_pm2_5Topic);
+#if USE_AHT10
+    Serial.print("temperature_topic:             ");
+    Serial.println(m_temperatureTopic);
+    Serial.print("humidity_topic:             ");
+    Serial.println(m_humidityTopic);
+#endif
     Serial.print("mqtt_server:            ");
     Serial.println(m_mqttServer);
     Serial.print("mqtt_port:              ");
@@ -73,7 +81,9 @@ void Settings::save()
     json["led_intensity_at_day"] = m_ledIntensityAtDay;
     json["led_intensity_at_night"] = m_ledIntensityAtNight;
 
-    json["mqtt_topic"] = m_mqttTopic;
+    json["pm2_5_topic"] = m_pm2_5Topic;
+    json["temperature_topic"] = m_temperatureTopic;
+    json["humidity_topic"] = m_humidityTopic;
     json["mqtt_server"] = m_mqttServer;
     json["mqtt_port"] = m_mqttPort;
     json["mqtt_username"] = m_mqttUserName;
@@ -162,8 +172,14 @@ void Settings::load()
         m_animationDuration = min(long(3000), max(long(0), numString.toInt()));
     }
 
-    if (json.containsKey("mqtt_topic")) {
-        m_mqttTopic = String(json["mqtt_topic"]);
+    if (json.containsKey("pm2_5_topic")) {
+        m_pm2_5Topic = String(json["pm2_5_topic"]);
+    }
+    if (json.containsKey("temperature_topic")) {
+        m_temperatureTopic = String(json["temperature_topic"]);
+    }
+    if (json.containsKey("pm2_5_topic")) {
+        m_humidityTopic = String(json["humidity_topic"]);
     }
     if (json.containsKey("mqtt_server")) {
         m_mqttServer = String(json["mqtt_server"]);
@@ -246,18 +262,48 @@ void Settings::setAnimationDuration(uint16_t duration)
     m_dirty = true;
 }
 
-String Settings::mqttTopic() const
+String Settings::pm2_5Topic() const
 {
-    return m_mqttTopic;
+    return m_pm2_5Topic;
 }
 
-void Settings::setMqttTopic(const String &topic)
+void Settings::setPm2_5Topic(const String &topic)
 {
-    if (m_mqttTopic == topic ) {
+    if (m_pm2_5Topic == topic ) {
         return;
     }
 
-    m_mqttTopic = topic;
+    m_pm2_5Topic = topic;
+    m_dirty = true;
+}
+
+String Settings::temperatureTopic() const
+{
+    return m_temperatureTopic;
+}
+
+void Settings::setTemperatureTopic(const String &topic)
+{
+    if (m_temperatureTopic == topic ) {
+        return;
+    }
+
+    m_temperatureTopic = topic;
+    m_dirty = true;
+}
+
+String Settings::humidityTopic() const
+{
+    return m_humidityTopic;
+}
+
+void Settings::setHumidityTopic(const String &topic)
+{
+    if (m_humidityTopic == topic ) {
+        return;
+    }
+
+    m_humidityTopic = topic;
     m_dirty = true;
 }
 

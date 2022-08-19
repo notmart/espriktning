@@ -21,6 +21,8 @@
 
 #include <Arduino.h>
 
+#define USE_AHT10 1
+
 class Settings {
 public:
     enum class Error {
@@ -55,8 +57,14 @@ public:
     uint16_t animationDuration() const;
     void setAnimationDuration(uint16_t duration);
 
-    String mqttTopic() const;
-    void setMqttTopic(const String &topic);
+    String pm2_5Topic() const;
+    void setPm2_5Topic(const String &topic);
+
+    String temperatureTopic() const;
+    void setTemperatureTopic(const String &topic);
+
+    String humidityTopic() const;
+    void setHumidityTopic(const String &topic);
 
     String mqttServer() const;
     void setMqttServer(const String &server);
@@ -79,7 +87,9 @@ private:
     uint16_t m_ledIntensityAtNight = 0;
     uint16_t m_animationDuration = 500;
 
-    String m_mqttTopic;
+    String m_pm2_5Topic;
+    String m_temperatureTopic;
+    String m_humidityTopic;
     String m_mqttServer;
     uint16_t m_mqttPort = 1883;
     String m_mqttUserName;

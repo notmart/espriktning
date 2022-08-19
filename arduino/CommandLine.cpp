@@ -80,8 +80,14 @@ void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager, SegmentPixels 
             Serial.println(Settings::self()->ledIntensityAtNight());
         } else if (key == "animation_duration") {
             Serial.println(Settings::self()->animationDuration());
-        } else if (key == "mqtt_topic") {
-            Serial.println(Settings::self()->mqttTopic());
+        } else if (key == "pm2_5_topic") {
+            Serial.println(Settings::self()->pm2_5Topic());
+#if USE_AHT10
+        } else if (key == "temperature_topic") {
+            Serial.println(Settings::self()->temperatureTopic());
+        } else if (key == "humiditytopic") {
+            Serial.println(Settings::self()->humidityTopic());
+#endif
         } else if (key == "mqtt_server") {
             Serial.println(Settings::self()->mqttServer());
         } else if (key == "mqtt_port") {
@@ -139,8 +145,14 @@ void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager, SegmentPixels 
                    pixels.setAnimationDuration(duration);
                 }
             }
-        } else if (key == "mqtt_topic") {
-            Settings::self()->setMqttTopic(val);
+        } else if (key == "pm2_5_topic") {
+            Settings::self()->setPm2_5Topic(val);
+#if USE_AHT10
+        } else if (key == "temperature_topic") {
+            Settings::self()->setTemperatureTopic(val);
+        } else if (key == "humidity_topic") {
+            Settings::self()->setHumidityTopic(val);
+#endif
         } else if (key == "mqtt_server") {
             Settings::self()->setMqttServer(val);
         } else if (key == "mqtt_port") {

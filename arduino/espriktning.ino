@@ -20,14 +20,16 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 
-#include <Adafruit_AHT10.h>
-
 #include "SegmentPixels.h"
 #include "Tokenizer.h"
 #include "WifiMQTTManager.h"
 #include "CommandLine.h"
 #include "Settings.h"
 #include "pm1006.h"
+
+#if USE_AHT10
+#include <Adafruit_AHT10.h>
+#endif
 
 #define PIN_PM1006_RX  5 //D1
 #define PIN_PM1006_TX  4 //D2
@@ -38,7 +40,9 @@
 static SoftwareSerial pmSerial(PIN_PM1006_RX, PIN_PM1006_TX);
 static PM1006 pm1006(&pmSerial);
 
+#if USE_AHT10
 Adafruit_AHT10 aht;
+#endif
 
 static const uint fanOnTime = 0;
 static const uint fanOffTime = 20000;
@@ -112,9 +116,10 @@ void setup()
         pixels.setColor(10,6,5);
         pixels.setNumber(88);
     }
-
+#if USE_AHT10
     Wire.begin(0, 12);
     aht.begin();
+#endif
 }
 
 void loop()
@@ -138,7 +143,9 @@ void loop()
            ledsOn = intensity > 0;
            pixels.setLedIntensity(intensity);
            if (ledsOn) {
-          //     pixels.setPM25ColorNumber(pm2_5);
+#if !(USE_AHT10)
+               pixels.setPM25ColorNumber(pm2_5);
+#endif
            }
            lastLdrTime = millis();
        }
@@ -165,6 +172,7 @@ void loop()
         factoryResetButtonDownTime = 0;
     }
 
+#if USE_AHT10
     if (millis() - lastDisplaySwitchTime > displaySwitchTime) {
         lastDisplaySwitchTime = millis();
         sensors_event_t humidity, temp;
@@ -188,7 +196,7 @@ void loop()
             }
         }
     }
-
+#endif
     
     long delta = millis() - lastCycleTime;
     if (delta > measurementTime) {
@@ -202,21 +210,21 @@ void loop()
             Serial.println("Measurement failed");
         }
 
+#if !(USE_AHT10)
         // for some reason first time after startup the sensor reads a wrong value > 1000
         if (ledsOn && pm2_5 <= 1000) {
-            //onst int num = round(double(pm2_5)/10);
-          //  pixels.setPM25ColorNumber(pm2_5);
+            pixels.setPM25ColorNumber(pm2_5);
         }
+#endif
 
         if (s->useWifi()) {
-           // std::shared_ptr<PubSubClient> client = wifiMQTT.ensureMqttClientConnected();
-           // client->loop();
-            //client->publish(Settings::self()->mqttTopic(), String(pm2_5).c_str(), true);
-            wifiMQTT.tryPublish(Settings::self()->mqttTopic(), String(pm2_5));
+            wifiMQTT.tryPublish(Settings::self()->pm2_5Topic(), String(pm2_5));
+#if USE_AHT10
             sensors_event_t humidity, temp;
             aht.getEvent(&humidity, &temp);
-            wifiMQTT.tryPublish("Temperature", String(temp.temperature));
-            wifiMQTT.tryPublish("Humidity", String(humidity.relative_humidity));
+            wifiMQTT.tryPublish(Settings::self()->temperatureTopic(), String(temp.temperature));
+            wifiMQTT.tryPublish(Settings::self()->humidityTopic(), String(humidity.relative_humidity));
+#endif
         }
     } else if (delta > fanOffTime) {
         if (fan) {

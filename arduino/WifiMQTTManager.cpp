@@ -31,12 +31,20 @@ WifiMQTTManager::~WifiMQTTManager()
 void WifiMQTTManager::setup()
 {
     Settings *s = Settings::self();
-    WiFiManagerParameter mqttName("name", "Friendly Name", s->mqttTopic().c_str(), 40);
+    WiFiManagerParameter mqttPm2_5("pm2_5", "PM2.5 Topic", s->pm2_5Topic().c_str(), 40);
+#if USE_AHT10
+    WiFiManagerParameter mqttTemp("temperature", "Temperature Topic", s->temperatureTopic().c_str(), 40);
+    WiFiManagerParameter mqttHum("humidity", "Humidity Topic", s->humidityTopic().c_str(), 40);
+#endif
     WiFiManagerParameter mqttServer("server", "MQTT Server", s->mqttServer().c_str(), 40);
     WiFiManagerParameter mqttPort("port", "MQTT Port", String(s->mqttPort()).c_str(), 6);
     WiFiManagerParameter mqttUserName("username", "mqtt username", s->mqttUserName().c_str(), 40);
     WiFiManagerParameter mqttPassword("password", "mqtt password", s->mqttPassword().c_str(), 40);
-    m_wifiManager.addParameter(&mqttName);
+    m_wifiManager.addParameter(&mqttPm2_5);
+#if USE_AHT10
+    m_wifiManager.addParameter(&mqttTemp);
+    m_wifiManager.addParameter(&mqttHum);
+#endif
     m_wifiManager.addParameter(&mqttServer);
     m_wifiManager.addParameter(&mqttPort);
     m_wifiManager.addParameter(&mqttUserName);
@@ -44,7 +52,11 @@ void WifiMQTTManager::setup()
 
     m_wifiManager.setSaveConfigCallback([&]() {
         Settings *s = Settings::self();
-        s->setMqttTopic(mqttName.getValue());
+        s->setPm2_5Topic(mqttPm2_5.getValue());
+#if USE_AHT10
+        s->setTemperatureTopic(mqttTemp.getValue());
+        s->setHumidityTopic(mqttHum.getValue());
+#endif
         s->setMqttServer(mqttServer.getValue());
         s->setMqttPort(max(long(0), min(long(65535), String(mqttPort.getValue()).toInt())));
         s->setMqttUserName(mqttUserName.getValue());
