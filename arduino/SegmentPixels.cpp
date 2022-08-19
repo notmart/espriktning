@@ -199,9 +199,9 @@ void SegmentPixels::setTempColorNumber(int number)
 {
     const int num = max(0, min(99, number));
     setColor(
-        max(0, num - 26),
+        max(0, num - 22),
         max(0, num < 25 ? num : 35 - num),
-        max(0, 23 - num)
+        max(0, 25 - num)
         );
     setNumber(num, 0b100);
 }
