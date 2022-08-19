@@ -20,6 +20,8 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 
+#include <Adafruit_AHT10.h>
+
 #include "SegmentPixels.h"
 #include "Tokenizer.h"
 #include "WifiMQTTManager.h"
@@ -36,12 +38,16 @@
 static SoftwareSerial pmSerial(PIN_PM1006_RX, PIN_PM1006_TX);
 static PM1006 pm1006(&pmSerial);
 
+Adafruit_AHT10 aht;
+
 static const uint fanOnTime = 0;
 static const uint fanOffTime = 20000;
 static const uint measurementTime = 30000;
+static const uint displaySwitchTime = 10000;
 
 unsigned long factoryResetButtonDownTime = 0;
 unsigned long lastCycleTime = 0;
+unsigned long lastDisplaySwitchTime = 0;
 
 static const uint ldrInterval = 120000;
 
@@ -53,6 +59,13 @@ bool fan = false;
 
 uint16_t pm2_5 = 0;
 
+enum DisplayType {
+    PM2_5 = 0,
+    Temperature = 1,
+    Humidity = 2
+};
+
+static DisplayType currentDisplay = PM2_5;
 
 WifiMQTTManager wifiMQTT("ESPriktning");
 NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> pixelBus(SegmentPixels::numPixelsForDigits(2,3), PIN_PIXELS);
@@ -99,6 +112,9 @@ void setup()
         pixels.setColor(10,6,5);
         pixels.setNumber(88);
     }
+
+    Wire.begin(0, 12);
+    aht.begin();
 }
 
 void loop()
@@ -122,8 +138,7 @@ void loop()
            ledsOn = intensity > 0;
            pixels.setLedIntensity(intensity);
            if (ledsOn) {
-               const int num = round(double(pm2_5)/10);
-               pixels.setPM25ColorNumber(pm2_5);
+          //     pixels.setPM25ColorNumber(pm2_5);
            }
            lastLdrTime = millis();
        }
@@ -150,6 +165,31 @@ void loop()
         factoryResetButtonDownTime = 0;
     }
 
+    if (millis() - lastDisplaySwitchTime > displaySwitchTime) {
+        lastDisplaySwitchTime = millis();
+        sensors_event_t humidity, temp;
+        aht.getEvent(&humidity, &temp);
+        Serial.print("Temperature: "); Serial.print(temp.temperature); Serial.println(" degrees C");
+        Serial.print("Humidity: "); Serial.print(humidity.relative_humidity); Serial.println("% rH");
+        if (ledsOn) {
+            currentDisplay = DisplayType((currentDisplay + 1) % (Humidity + 1));
+            switch (currentDisplay) {
+            case PM2_5:
+                Serial.println("showing PM2.5");
+                pixels.setPM25ColorNumber(pm2_5);
+                break;
+            case Temperature:
+                Serial.println("showing temp");
+                pixels.setTempColorNumber(temp.temperature);
+                break;
+            case Humidity:
+                Serial.println("showing humidity");
+                pixels.setHumidityColorNumber(humidity.relative_humidity);
+            }
+        }
+    }
+
+    
     long delta = millis() - lastCycleTime;
     if (delta > measurementTime) {
         lastCycleTime = millis();
@@ -165,7 +205,7 @@ void loop()
         // for some reason first time after startup the sensor reads a wrong value > 1000
         if (ledsOn && pm2_5 <= 1000) {
             //onst int num = round(double(pm2_5)/10);
-            pixels.setPM25ColorNumber(pm2_5);
+          //  pixels.setPM25ColorNumber(pm2_5);
         }
 
         if (s->useWifi()) {
@@ -173,6 +213,10 @@ void loop()
            // client->loop();
             //client->publish(Settings::self()->mqttTopic(), String(pm2_5).c_str(), true);
             wifiMQTT.tryPublish(Settings::self()->mqttTopic(), String(pm2_5));
+            sensors_event_t humidity, temp;
+            aht.getEvent(&humidity, &temp);
+            wifiMQTT.tryPublish("Temperature", String(temp.temperature));
+            wifiMQTT.tryPublish("Humidity", String(humidity.relative_humidity));
         }
     } else if (delta > fanOffTime) {
         if (fan) {

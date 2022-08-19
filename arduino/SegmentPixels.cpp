@@ -120,7 +120,7 @@ void SegmentPixels::updateAnimation()
     m_pixels->Show();
 }
 
-void SegmentPixels::setNumber(int number)
+void SegmentPixels::setNumber(int number, int padding)
 {
     if (number == m_number) {
         return;
@@ -153,7 +153,7 @@ void SegmentPixels::setNumber(int number)
  
     int start = 0;
     for (int i = 0; i < m_paddingPixels; ++i) {
-        m_pixelMask |= 1 << i;
+        m_pixelMask |= (padding & (1 << i));
         ++start;
     }
 
@@ -192,5 +192,29 @@ void SegmentPixels::setPM25ColorNumber(int number)
         max(0, (num - 20) / 2),
         max(0, 42 - num),
         num <= 15 ? 15 - num : 0);
-    setNumber(num);
+    setNumber(num, 0b001);
+}
+
+void SegmentPixels::setTempColorNumber(int number)
+{
+    const int num = max(0, min(99, number));
+    setColor(
+        max(0, num - 26),
+        max(0, num < 25 ? num : 35 - num),
+        max(0, 23 - num)
+        );
+    setNumber(num, 0b100);
+}
+
+void SegmentPixels::setHumidityColorNumber(int number)
+{
+    const int num = max(0, min(99, number));
+    // from 0 to 40 too dry
+    // over 70 too moist
+    setColor(
+        max(0, (40 - num) / 2),
+        max(0, num < 50 ? (num - 30) : (70 - num)),
+        max(0, (num - 60) / 2)
+        );
+    setNumber(num, 0b010);
 }

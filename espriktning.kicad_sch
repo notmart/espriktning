@@ -5116,7 +5116,7 @@
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 1ac2416b-7be4-4811-9614-9bf5633972fd)
     (property "Reference" "FB1" (id 0) (at 54.5719 112.7084 90))
-    (property "Value" "60R" (id 1) (at 54.5719 115.2453 90))
+    (property "Value" "300R" (id 1) (at 54.5719 115.2453 90))
     (property "Footprint" "Resistor_SMD:R_0603_1608Metric" (id 2) (at 54.61 119.888 90)
       (effects (font (size 1.27 1.27)) hide)
     )
@@ -5876,7 +5876,7 @@
       (reference "D19") (unit 1) (value "1N4007") (footprint "Diode_SMD:D_SOD-323")
     )
     (path "/1ac2416b-7be4-4811-9614-9bf5633972fd"
-      (reference "FB1") (unit 1) (value "60R") (footprint "Resistor_SMD:R_0603_1608Metric")
+      (reference "FB1") (unit 1) (value "300R") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
     (path "/00000000-0000-0000-0000-00006217af1d"
       (reference "J1") (unit 1) (value "USB_C_Receptacle_USB2.0") (footprint "espriktning:usb-c-vertical-8")

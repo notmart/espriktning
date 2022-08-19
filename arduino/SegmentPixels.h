@@ -36,9 +36,11 @@ public:
     double ledIntensity() const;
     void setLedIntensity(double intensity);
 
-    void setNumber(int number);
+    void setNumber(int number, int padding = 0b111);
     void setColor(uint8_t r, uint8_t g, uint8_t b);
     void setPM25ColorNumber(int number);
+    void setTempColorNumber(int number);
+    void setHumidityColorNumber(int number);
     void updateAnimation();
 
 private:
