@@ -16,19 +16,19 @@ So why not completely replacing IKEA PCB? there is the notmart ESPriktning proje
 
 [https://github.com/notmart/espriktning](https://github.com/notmart/espriktning)
 
-![esprikning](https://github.com/erobertorichiardone/espriktning_bme280/blob/master/images/espriktning.jpeg)
+<img src="https://github.com/erobertorichiardone/espriktning_bme280/blob/master/images/espriktning.jpeg" width="300">
 
 
 At this point, adding an additional sensor to measure temperature, humidity and pressure is simple using a small BME280 sensor. This fork adds MQTT data pushing if the BME280 is connected, and a display notification also for temperature.
 
 Board inside:
-![esprikning_bme280_0](https://github.com/erobertorichiardone/espriktning_bme280/blob/master/images/espriktning_bme280_0.jpeg)
+<img src="https://github.com/erobertorichiardone/espriktning_bme280/blob/master/images/espriktning_bme280_0.jpeg" width="300">
 
 PM2.5 local display:
-![esprikning_bme280_2](https://github.com/erobertorichiardone/espriktning_bme280/blob/master/images/espriktning_bme280_2.jpeg)
+<img src="https://github.com/erobertorichiardone/espriktning_bme280/blob/master/images/espriktning_bme280_2.jpeg" width="300">
 
 Temperature local display:
-![esprikning_bme280_3](https://github.com/erobertorichiardone/espriktning_bme280/blob/master/images/espriktning_bme280_3.jpeg)
+<img src="https://github.com/erobertorichiardone/espriktning_bme280/blob/master/images/espriktning_bme280_3.jpeg" width="300">
 
 
 
