@@ -44,20 +44,20 @@ Temperature local display:
 Use Arduino 1.8.0 onward
 
 Add ESP8266 board (File -> Preferences -> Additional Boards Manager URLs)
-	http://arduino.esp8266.com/stable/package_esp8266com_index.json
+* http://arduino.esp8266.com/stable/package_esp8266com_index.json
 
 Add following libaries (Tools -> Library):
-	WiFiMQTTManager Library 1.0.1-beta
-	WiFiManager 2.0.11-beta
-	PubSubClient 2.8.0
-	BME280 3.0.0 by Tyler Glenn
-	NeoPixelBus by Makuna 2.7.0
+* 	WiFiMQTTManager Library 1.0.1-beta
+* 	WiFiManager 2.0.11-beta
+* 	PubSubClient 2.8.0
+* 	BME280 3.0.0 by Tyler Glenn
+* 	NeoPixelBus by Makuna 2.7.0
 
 Add the board (Tools -> Board -> Boards Manager)
-	esp8266 3.0.2
+* 	esp8266 3.0.2
 	
 Choose a compatible board (Tools -> Board -> ESP8266 Boards (3.0.2) )
-	Generic ESP8266 Module or LOLIN(WEMOS) D1 mini (clone) 
+* 	Generic ESP8266 Module or LOLIN(WEMOS) D1 mini (clone) 
 
 
 ## User configuration
