@@ -40,6 +40,7 @@
 
 #define LEDINTENSITYATNIGHT 10  // from 0 to 100
 #define LDRBIAS 500 // ambient luminosity to determine if daylight or not
+#define TEMP_COMPENSATION -5 // temperature adjust because of esp8266 heating
 #define VERBOSE true
 #define MQTT_TOPIC_PM2_5 "/pm2_5"
 #define MQTT_TOPIC_TEMP "/temp"
@@ -58,7 +59,18 @@
 static SoftwareSerial pmSerial(PIN_PM1006_RX, PIN_PM1006_TX);
 static PM1006 pm1006(&pmSerial);
 
-BME280I2C bme;
+BME280I2C::Settings bmesettings(
+   BME280::OSR_X1,
+   BME280::OSR_X1,
+   BME280::OSR_X1,
+   BME280::Mode_Forced,
+   BME280::StandbyTime_1000ms,
+   BME280::Filter_16,
+   BME280::SpiEnable_False,
+   BME280I2C::I2CAddr_0x76
+);
+
+BME280I2C bme(bmesettings);
 
 static const uint fanOnTime = 0;
 static const uint fanOffTime = 20000;
@@ -74,7 +86,7 @@ unsigned long lastLdrTime = 0;
 bool ledsOn = true;
 bool fan = false;
 
-bool flag;
+uint8_t initial_wait;
 
 uint16_t pm2_5 = 0;
 
@@ -105,6 +117,9 @@ void getBMEData(){
   BME280::PresUnit presUnit(BME280::PresUnit_hPa);
   bme.read(bme_pres, bme_temp, bme_hum, tempUnit, presUnit);
 
+  // temperature correction
+  bme_temp += TEMP_COMPENSATION;
+  
   #ifdef VERBOSE
   Serial.println("Info: read " + String(bme_temp) + " °C " + String(bme_hum) + " %RH " + String(bme_pres) + " hPa");
   #endif
@@ -158,7 +173,7 @@ void setup()
     pixels.setNumber(88);
   }
 
-  flag = false;
+  initial_wait = 2;
 }
 
 void loop()
@@ -172,7 +187,6 @@ void loop()
     ledsOn = false;
     if (millis() - lastLdrTime > ldrInterval + 2000) {
       
-      // TODO verify
       Serial.print("LDR:");
       Serial.println(analogRead(PIN_LDR));
       double intensity = 0.0;
@@ -185,18 +199,16 @@ void loop()
       pixels.setLedIntensity(intensity);
       
       if(ledsOn){
-        if(bme_flag){
-          if(display_alt){
+        if(display_alt){
+          if(bme_flag){
             pixels.setTempColorNumber(bme_temp);
-            display_alt = false;
+          } else {
+            pixels.setPM25ColorNumber(pm2_5);
           }
-        } else {
           display_alt = false;
-        }
-
-        if(!display_alt){
+        } else {
           pixels.setPM25ColorNumber(pm2_5);
-          display_alt = true;
+           display_alt = true;
         }
         
       }
@@ -227,10 +239,10 @@ void loop()
 
 
   long delta = millis() - lastCycleTime;
-  if (delta > measurementTime) {
+  if(delta > measurementTime) {
     lastCycleTime = millis();
 
-    if (flag) {
+    if(initial_wait == 0) {
       printf("Info: Attempting measurements:\n");
       if(pm1006.read_pm25(&pm2_5)){
         Serial.print("Info: PM2.5 New sensor value:");
@@ -241,21 +253,25 @@ void loop()
       if(bme_flag){
         getBMEData();
       }
+
+      // publish after initial wait
+      if (s->useWifi()) {
+        // std::shared_ptr<PubSubClient> client = wifiMQTT.ensureMqttClientConnected();
+        // client->loop();
+        //client->publish(Settings::self()->mqttTopic(), String(pm2_5).c_str(), true);
+        wifiMQTT.tryPublish(Settings::self()->mqttTopic() + MQTT_TOPIC_PM2_5, String(pm2_5));
+        if(bme_flag){
+          wifiMQTT.tryPublish(Settings::self()->mqttTopic() + MQTT_TOPIC_TEMP, String(bme_temp));
+          wifiMQTT.tryPublish(Settings::self()->mqttTopic() + MQTT_TOPIC_PRES, String(bme_pres));
+          wifiMQTT.tryPublish(Settings::self()->mqttTopic() + MQTT_TOPIC_HUM, String(bme_hum));            
+        }
+      }
+      
     } else {
-      flag = true;
+      initial_wait--;
     }
 
-    if (s->useWifi()) {
-      // std::shared_ptr<PubSubClient> client = wifiMQTT.ensureMqttClientConnected();
-      // client->loop();
-      //client->publish(Settings::self()->mqttTopic(), String(pm2_5).c_str(), true);
-      wifiMQTT.tryPublish(Settings::self()->mqttTopic() + MQTT_TOPIC_PM2_5, String(pm2_5));
-      if(bme_flag){
-        wifiMQTT.tryPublish(Settings::self()->mqttTopic() + MQTT_TOPIC_TEMP, String(bme_temp));
-        wifiMQTT.tryPublish(Settings::self()->mqttTopic() + MQTT_TOPIC_PRES, String(bme_pres));
-        wifiMQTT.tryPublish(Settings::self()->mqttTopic() + MQTT_TOPIC_HUM, String(bme_hum));            
-      }
-    }
+
   } else if (delta > fanOffTime) {
     if (fan) {
       Serial.println("turning fan off");

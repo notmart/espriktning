@@ -12,23 +12,16 @@ PM1006::PM1006(Stream * serial){
 
 bool PM1006::read_pm25(uint16_t *pm){
   
-  #ifdef VERBOSE
-  Serial.printf("Reading PM2.5 value... ");
-  #endif
-    
+  // Serial.printf("Reading PM2.5 value... ");
+  
   if(request()){
     *pm = (_rxbuf[5] << 8) + _rxbuf[6];
 
-    #ifdef VERBOSE
-    Serial.printf("\nRead: %d ug/m^3\n", *pm);
-    #endif
-    
+    // Serial.printf("\nRead: %d ug/m^3\n", *pm);
     return true;
   }
 
-  #ifdef VERBOSE
-  Serial.printf("failed!\n");
-  #endif
+  //Serial.printf("failed!\n");
   
   return false;
 }
@@ -46,12 +39,12 @@ bool PM1006::request(){
       _rxbuf[i++] = _serial->read();
       if(i == RX_BUF_LEN){
         
-        #ifdef VERBOSE
+        /* 
         int i;
         for(i = 0; i < RX_BUF_LEN; i++){
           Serial.printf(" %02hhX", _rxbuf[i]);  
         }
-        #endif
+        */
         
         return check_rx();
       }

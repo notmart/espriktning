@@ -1,19 +1,36 @@
-# espriktning_bme280
+# espriktning bme280
 ESP8266 based board replacement for Vindriktning with PM1006 and BME280 sensors
 
 All started from Hypfer to send PM2.5 values to MQTT server
+
 [https://github.com/Hypfer/esp8266-vindriktning-particle-sensor](https://github.com/Hypfer/esp8266-vindriktning-particle-sensor)
 
+
 Then some custom PCB to fit inside the case, because adding some object in the case seems to modify PM2.5 readings.
+
 [https://hackaday.io/project/181195-ikea-vindriktning-pcb](https://hackaday.io/project/181195-ikea-vindriktning-pcb)
+
 
 But we need to read the PM2.5 values from the front of the device, not only a generic light!
 So why not completely replacing IKEA PCB? there is the notmart ESPriktning project that still uses an ESP8266 board on a single completely new board
+
 [https://github.com/notmart/espriktning](https://github.com/notmart/espriktning)
+
+![esprikning](https://github.com/erobertorichiardone/espriktning_bme280/blob/master/images/espriktning.jpeg)
+
 
 At this point, adding an additional sensor to measure temperature, humidity and pressure is simple using a small BME280 sensor. This fork adds MQTT data pushing if the BME280 is connected, and a display notification also for temperature.
 
-![imagename](TargetUrl)
+Board inside:
+![esprikning_bme280_0](https://github.com/erobertorichiardone/espriktning_bme280/blob/master/images/espriktning_bme280_0.jpeg)
+
+PM2.5 local display:
+![esprikning_bme280_2](https://github.com/erobertorichiardone/espriktning_bme280/blob/master/images/espriktning_bme280_2.jpeg)
+
+Temperature local display:
+![esprikning_bme280_3](https://github.com/erobertorichiardone/espriktning_bme280/blob/master/images/espriktning_bme280_3.jpeg)
+
+
 
 
 ## Board deployment
@@ -58,6 +75,16 @@ The MQTT values will be pushed to the server on the following topics:
 * pressure in hPa ->   PREFIX/pres
 * humidity in % ->   PREFIX/hum
 
+Sample publish values:
+
+```
+err@elitedesk:~$ mosquitto_sub -v -h localhost -t '#'
+esprikningstudio/pm2_5 11
+esprikningstudio/temp 32.92
+esprikningstudio/pres 980.68
+esprikningstudio/hum 25.13
+```
+
 If BME280 is not found, temperature, pressure and humidity are not sent.
 
 
@@ -66,8 +93,24 @@ If BME280 is not found, temperature, pressure and humidity are not sent.
 Can be accomplished:
 1. From Arduino, under Tools -> Erase Flash -> All Flash Contents
 2. Physically pressing the SW2 flash pins for more that 2 seconds
-3. From Arduino serial monitor connection using "help" command (TO BE FIXED)
+3. From Arduino serial connection
 
+## Serial interface
+
+Write "help" from serial monitor interface. Speed is 115200 baud.
+
+
+Commands:
+help                   Shows this help
+reboot                 Reboots the device
+printwifisettings      Prints SSID and password of the current wifi connection
+connectwifi SSID pass  Attempts to connect to a new wifi network
+testnumber  num        Tests the number and color animation with the given 0-99 number
+printsettings          Prints all available settings
+get config_key         Prints the value of the given config key
+set config_key value   Sets the value of the given config key to the given value
+factoryreset           Forgets wifi and other settings, starts as new
+turning fan off
 
 
 

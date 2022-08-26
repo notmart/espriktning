@@ -128,6 +128,7 @@ bool WifiMQTTManager::tryPublish(const String &topic, const String &val)
         Serial.print(s->mqttUserName().c_str());Serial.print(s->mqttPassword().c_str());
         if (m_pubSubClient->connect(topic.c_str(), s->mqttUserName().c_str(), s->mqttPassword().c_str())) {
             Serial.println("MQTT connected");
+            break;
         } else {
             Serial.print("failed:");
             Serial.print(m_pubSubClient->state());

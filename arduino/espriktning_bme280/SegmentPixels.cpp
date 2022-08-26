@@ -21,7 +21,7 @@
 
 #include <math.h>
 
-SegmentPixelMinus = 0b0001000;
+int SegmentPixelMinus = 0b0001000;
 
 const int SegmentPixels::s_segmentFlags[10] = {
     0b1110111, // 0
