@@ -21,13 +21,19 @@ So why not completely replacing IKEA PCB? there is the notmart ESPriktning proje
 
 At this point, adding an additional sensor to measure temperature, humidity and pressure is simple using a small BME280 sensor. This fork adds MQTT data pushing if the BME280 is connected, and a display notification also for temperature.
 
+
 Board inside:
+
 <img src="https://github.com/erobertorichiardone/espriktning_bme280/blob/master/images/espriktning_bme280_0.jpeg" width="300">
 
+
 PM2.5 local display:
+
 <img src="https://github.com/erobertorichiardone/espriktning_bme280/blob/master/images/espriktning_bme280_2.jpeg" width="300">
 
+
 Temperature local display:
+
 <img src="https://github.com/erobertorichiardone/espriktning_bme280/blob/master/images/espriktning_bme280_3.jpeg" width="300">
 
 
@@ -99,7 +105,8 @@ Can be accomplished:
 
 Write "help" from serial monitor interface. Speed is 115200 baud.
 
-
+```
+help
 Commands:
 help                   Shows this help
 reboot                 Reboots the device
@@ -111,6 +118,7 @@ get config_key         Prints the value of the given config key
 set config_key value   Sets the value of the given config key to the given value
 factoryreset           Forgets wifi and other settings, starts as new
 turning fan off
+```
 
 
 
