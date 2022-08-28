@@ -118,7 +118,7 @@ bool WifiMQTTManager::tryPublish(const String &topic, const String &val)
     m_pubSubClient->setServer(s->mqttServer().c_str(), s->mqttPort());
     int attempts = 0;
 
-    while (attempts < 5 && !m_pubSubClient->connected()) {
+    while (attempts < 3 && !m_pubSubClient->connected()) {
         ++attempts;
         Serial.print("Attempting MQTT connection...");
         Serial.print(attempts);
@@ -132,9 +132,11 @@ bool WifiMQTTManager::tryPublish(const String &topic, const String &val)
         } else {
             Serial.print("failed:");
             Serial.print(m_pubSubClient->state());
-            Serial.println(" try again in 5 seconds");
+            // Serial.println(" try again in 5 seconds");
             // Wait 5 seconds before retrying
-            delay(5000);
+            // delay(5000);
+            // note: too blocking here, will retry next time
+            break;
         }
     }
 
@@ -144,8 +146,8 @@ bool WifiMQTTManager::tryPublish(const String &topic, const String &val)
         // Seems to work better connecting and  disconnecting the client every time
         m_client.stop();
         return true;
-    } else {
-        Serial.println("Server not responding: giving up");
-        return false;
     }
+    
+    Serial.println("Server not responding: giving up");
+    return false;
 }

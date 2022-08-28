@@ -40,7 +40,8 @@
 
 #define LEDINTENSITYATNIGHT 10  // from 0 to 100
 #define LDRBIAS 500 // ambient luminosity to determine if daylight or not
-#define TEMP_COMPENSATION -5 // temperature adjust because of esp8266 heating
+#define TEMP_COMPENSATION_SUM -2 // temperature adjust because of esp8266 heating
+#define TEMP_COMPENSATION_ADD 0.85 //  temperature adjust because of esp8266 heating
 #define VERBOSE true
 #define MQTT_TOPIC_PM2_5 "/pm2_5"
 #define MQTT_TOPIC_TEMP "/temp"
@@ -118,7 +119,8 @@ void getBMEData(){
   bme.read(bme_pres, bme_temp, bme_hum, tempUnit, presUnit);
 
   // temperature correction
-  bme_temp += TEMP_COMPENSATION;
+  bme_temp += TEMP_COMPENSATION_SUM;
+  bme_temp *= TEMP_COMPENSATION_ADD;
   
   #ifdef VERBOSE
   Serial.println("Info: read " + String(bme_temp) + " °C " + String(bme_hum) + " %RH " + String(bme_pres) + " hPa");
@@ -215,7 +217,8 @@ void loop()
       lastLdrTime = millis();
     }
   }
-
+  pixels.updateAnimation();
+  
   // TODO: parse some commands form the tokenizer
   if (tokenizer.tokenizeFromSerial()) {
     parseCommand(tokenizer, wifiMQTT, pixels);
@@ -285,5 +288,5 @@ void loop()
       fan = true;
     }
   }
-  pixels.updateAnimation();
+  //  pixels.updateAnimation();
 }

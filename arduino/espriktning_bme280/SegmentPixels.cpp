@@ -198,12 +198,16 @@ void SegmentPixels::setPM25ColorNumber(int number)
 
 void SegmentPixels::setTempColorNumber(float temp)
 {
+    if( ((int)(temp * 10.0) ) % 10 > 5){
+      temp += 1.0;
+    }
     if(temp < 0){
       temp = 0;
     }
     if(temp > 99){
       temp = 99;
     }
+        
     // white
     setColor(99, 99, 99);
     setNumber((unsigned int) temp);
