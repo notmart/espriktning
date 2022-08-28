@@ -122,14 +122,6 @@ turning fan off
 
 ## Greetings
 
-This project exists thanks to:
-<a href="http://avvoca.to.it/">DLx</a>
-<a href="http://notmart.org/">notmart</a>
-
-
-
-## Greetings
-
 This project exists thankfully to:
 <a href="http://avvoca.to.it/">DLx</a>
 <a href="http://notmart.org/">notmart</a>
