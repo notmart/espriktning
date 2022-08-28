@@ -41,7 +41,7 @@
 #define LEDINTENSITYATNIGHT 10  // from 0 to 100
 #define LDRBIAS 500 // ambient luminosity to determine if daylight or not
 #define TEMP_COMPENSATION_SUM -2 // temperature adjust because of esp8266 heating
-#define TEMP_COMPENSATION_ADD 0.85 //  temperature adjust because of esp8266 heating
+#define TEMP_COMPENSATION_ADD 0.8 //  temperature adjust because of esp8266 heating
 #define VERBOSE true
 #define MQTT_TOPIC_PM2_5 "/pm2_5"
 #define MQTT_TOPIC_TEMP "/temp"
