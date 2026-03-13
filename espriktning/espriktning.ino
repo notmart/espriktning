@@ -60,6 +60,8 @@ unsigned long lastLdrTime = 0;
 bool ledsOn = true;
 bool fan = false;
 
+static const float temperatureAdjust = 0.81;
+static const float humidityAdjust = 1.38;
 
 uint16_t pm2_5 = 0;
 
@@ -86,6 +88,7 @@ void syncPixelsAnimation()
 
 void setup()
 {
+    ESP.wdtEnable(8000);
     enableWiFiAtBootTime();
     WiFi.setPhyMode(WIFI_PHY_MODE_11G);
 
@@ -124,6 +127,7 @@ void setup()
 
 void loop()
 {
+   ESP.wdtFeed(); 
    Settings *s = Settings::self();
 
    // Every now and then shut down the leds, measure the light and shut down until is dark (configurable?)
@@ -177,6 +181,10 @@ void loop()
         lastDisplaySwitchTime = millis();
         sensors_event_t humidity, temp;
         aht.getEvent(&humidity, &temp);
+        Serial.print("RawTemperature: "); Serial.print(temp.temperature); Serial.println(" degrees C");
+        Serial.print("RawHumidity: "); Serial.print(humidity.relative_humidity); Serial.println("% rH");
+        temp.temperature *= temperatureAdjust;
+        humidity.relative_humidity *= humidityAdjust;
         Serial.print("Temperature: "); Serial.print(temp.temperature); Serial.println(" degrees C");
         Serial.print("Humidity: "); Serial.print(humidity.relative_humidity); Serial.println("% rH");
         if (ledsOn) {
@@ -188,11 +196,11 @@ void loop()
                 break;
             case Temperature:
                 Serial.println("showing temp");
-                pixels.setTempColorNumber(temp.temperature);
+                pixels.setTempColorNumber(round(temp.temperature));
                 break;
             case Humidity:
                 Serial.println("showing humidity");
-                pixels.setHumidityColorNumber(humidity.relative_humidity);
+                pixels.setHumidityColorNumber(round(humidity.relative_humidity));
             }
         }
     }
@@ -222,6 +230,8 @@ void loop()
 #if USE_AHT10
             sensors_event_t humidity, temp;
             aht.getEvent(&humidity, &temp);
+            temp.temperature *= temperatureAdjust;
+            humidity.relative_humidity *= humidityAdjust;
             wifiMQTT.tryPublish(Settings::self()->temperatureTopic(), String(temp.temperature));
             wifiMQTT.tryPublish(Settings::self()->humidityTopic(), String(humidity.relative_humidity));
 #endif

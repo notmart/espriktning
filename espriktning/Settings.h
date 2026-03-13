@@ -21,7 +21,7 @@
 
 #include <Arduino.h>
 
-#define USE_AHT10 1
+#define USE_AHT10 0
 
 class Settings {
 public:

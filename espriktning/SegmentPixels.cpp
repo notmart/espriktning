@@ -192,7 +192,11 @@ void SegmentPixels::setPM25ColorNumber(int number)
         max(0, (num - 20) / 2),
         max(0, 42 - num),
         num <= 15 ? 15 - num : 0);
+#if USE_AHT10
     setNumber(num, 0b001);
+#else
+    setNumber(num, 0b111);
+#endif
 }
 
 void SegmentPixels::setTempColorNumber(int number)

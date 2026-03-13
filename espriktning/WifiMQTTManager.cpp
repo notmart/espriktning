@@ -145,7 +145,7 @@ bool WifiMQTTManager::tryPublish(const String &topic, const String &val)
             Serial.print(m_pubSubClient->state());
             Serial.println(" try again in 5 seconds");
             // Wait 5 seconds before retrying
-            delay(5000);
+            //delay(5000);
         }
     }
 
