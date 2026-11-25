@@ -26,4 +26,5 @@
 
 void showHelp();
 
-void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager, SegmentPixels &pixels);
+void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager, SegmentPixels &pixels, uint16_t pm2_5, uint16_t ldrValue, float temperatureValue, float humidityValue);
+

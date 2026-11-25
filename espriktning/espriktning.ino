@@ -64,6 +64,9 @@ static const float temperatureAdjust = 0.81;
 static const float humidityAdjust = 1.38;
 
 uint16_t pm2_5 = 0;
+uint16_t ldrValue = 0;
+float temperatureValue = 0.0;
+float humidityValue = 0.0;
 
 enum DisplayType {
     PM2_5 = 0,
@@ -130,16 +133,19 @@ void loop()
    ESP.wdtFeed(); 
    Settings *s = Settings::self();
 
+   ldrValue = analogRead(PIN_LDR);
    // Every now and then shut down the leds, measure the light and shut down until is dark (configurable?)
    if (millis() - lastLdrTime > ldrInterval) {
        double intensity = double(s->ledIntensityAtNight()) / 100;
        pixels.setColor(0, 0, 0);
        ledsOn = false;
        if (millis() - lastLdrTime > ldrInterval + 2000) {
-           Serial.print("LDR:");
-           Serial.println(analogRead(PIN_LDR));
+           if (s->printDebug()) {
+               Serial.print("LDR:");
+               Serial.println(ldrValue);
+           }
            double intensity = 0.0;
-           if (analogRead(PIN_LDR) > 500) {
+           if (ldrValue > 500) {
                intensity = double(s->ledIntensityAtDay()) / 100;
            } else {
                intensity = double(s->ledIntensityAtNight()) / 100;
@@ -154,11 +160,6 @@ void loop()
            lastLdrTime = millis();
        }
    }
-
-    // TODO: parse some commands form the tokenizer
-    if (tokenizer.tokenizeFromSerial()) {
-        parseCommand(tokenizer, wifiMQTT, pixels);
-    }
 
     // Commandline may have modified settings
     if (s->isDirty()) {
@@ -181,28 +182,41 @@ void loop()
         lastDisplaySwitchTime = millis();
         sensors_event_t humidity, temp;
         aht.getEvent(&humidity, &temp);
-        Serial.print("RawTemperature: "); Serial.print(temp.temperature); Serial.println(" degrees C");
-        Serial.print("RawHumidity: "); Serial.print(humidity.relative_humidity); Serial.println("% rH");
+        if (s->printDebug()) {
+            Serial.print("RawTemperature: "); Serial.print(temp.temperature); Serial.println(" degrees C");
+            Serial.print("RawHumidity: "); Serial.print(humidity.relative_humidity); Serial.println("% rH");
+        }
         temp.temperature *= temperatureAdjust;
         humidity.relative_humidity *= humidityAdjust;
-        Serial.print("Temperature: "); Serial.print(temp.temperature); Serial.println(" degrees C");
-        Serial.print("Humidity: "); Serial.print(humidity.relative_humidity); Serial.println("% rH");
+        temperatureValue = temp.temperature;
+        humidityValue = humidity.relative_humidity;
+        if (s->printDebug()) {
+            Serial.print("Temperature: "); Serial.print(temp.temperature); Serial.println(" degrees C");
+            Serial.print("Humidity: "); Serial.print(humidity.relative_humidity); Serial.println("% rH");
+        }
         if (ledsOn) {
             currentDisplay = DisplayType((currentDisplay + 1) % (Humidity + 1));
             switch (currentDisplay) {
             case PM2_5:
-                Serial.println("showing PM2.5");
+                if (s->printDebug()) {
+                    Serial.println("showing PM2.5");
+                }
                 pixels.setPM25ColorNumber(pm2_5);
                 break;
             case Temperature:
-                Serial.println("showing temp");
+                if (s->printDebug()) {
+                    Serial.println("showing temp");
+                }
                 pixels.setTempColorNumber(round(temp.temperature));
                 break;
             case Humidity:
-                Serial.println("showing humidity");
+                if (s->printDebug()) {
+                    Serial.println("showing humidity");
+                }
                 pixels.setHumidityColorNumber(round(humidity.relative_humidity));
             }
         }
+
     }
 #endif
     
@@ -212,10 +226,14 @@ void loop()
 
         printf("Attempting measurement:\n");
         if (pm1006.read_pm25(&pm2_5)) {
-            Serial.print("New sensor value:");
-            Serial.println(String(pm2_5).c_str());
+            if (s->printDebug()) {
+                Serial.print("New sensor value:");
+                Serial.println(String(pm2_5).c_str());
+            }
         } else {
-            Serial.println("Measurement failed");
+            if (s->printDebug()) {
+                Serial.println("Measurement failed");
+            }
         }
 
 #if !(USE_AHT10)
@@ -238,16 +256,25 @@ void loop()
         }
     } else if (delta > fanOffTime) {
         if (fan) {
-            Serial.println("turning fan off");
+            if (s->printDebug()) {
+                Serial.println("turning fan off");
+            }
             digitalWrite(PIN_FAN, 0);
             fan = false;
         }
     } else if (delta > fanOnTime) {
         if (!fan) {
-            Serial.println("turning fan on");
+            if (s->printDebug()) {
+                Serial.println("turning fan on");
+            }
             digitalWrite(PIN_FAN, 1);
             fan = true;
         }
+    }
+
+    // TODO: parse some commands form the tokenizer
+    if (tokenizer.tokenizeFromSerial()) {
+        parseCommand(tokenizer, wifiMQTT, pixels, pm2_5, ldrValue, temperatureValue, humidityValue);
     }
     pixels.updateAnimation();
 }

@@ -30,6 +30,7 @@ void showHelp()
     Serial.println("connectwifi SSID pass  Attempts to connect to a new wifi network");
     Serial.println("testnumber  num        Tests the number and color animation with the given 0-99 number");
     Serial.println("printsettings          Prints all available settings");
+    Serial.println("printsensors           Prints latest readouts of all sensors");
     Serial.println("get config_key         Prints the value of the given config key");
     Serial.println("set config_key value   Sets the value of the given config key to the given value");
     Serial.println("factoryreset           Forgets wifi and other settings, starts as new");
@@ -44,7 +45,7 @@ bool isNumber(const String &string) {
     return true;
 }
 
-void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager, SegmentPixels &pixels)
+void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager, SegmentPixels &pixels, uint16_t pm2_5, uint16_t ldrValue, float temperatureValue, float humidityValue)
 {
     if (tokenizer.numTokens() == 1) {
         if (tokenizer[0] == "help") {
@@ -62,6 +63,15 @@ void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager, SegmentPixels 
             Serial.println(manager.getWifiPass());
             Serial.print("IP:   ");
             Serial.println(WiFi.localIP());
+        } else if (tokenizer[0] == "printsensors") {
+            Serial.print("       PM 2.5: ");
+            Serial.println(pm2_5);
+            Serial.print("  Temperature: ");
+            Serial.println(temperatureValue);
+            Serial.print("     Humidity: ");
+            Serial.println(humidityValue);
+            Serial.print("Ambient light: ");
+            Serial.println(ldrValue);
         }
     } else if (tokenizer.numTokens() == 2 && tokenizer[0] == "testnumber") {
         const String numStr = tokenizer[1];
@@ -95,6 +105,8 @@ void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager, SegmentPixels 
         } else if (key == "mqtt_user_name") {
             Serial.println(Settings::self()->mqttUserName());
         } else if (key == "mqtt_password") {
+            Serial.println(Settings::self()->mqttPassword());
+        } else if (key == "print_debug") {
             Serial.println(Settings::self()->mqttPassword());
         } else {
             Serial.print("Invalid configuration key: ");
@@ -170,6 +182,8 @@ void parseCommand(Tokenizer &tokenizer, WifiMQTTManager &manager, SegmentPixels 
             Settings::self()->setMqttUserName(val);
         } else if (key == "mqtt_password") {
             Settings::self()->setMqttPassword(val);
+        } else if (key == "print_debug") {
+            Settings::self()->setPrintDebug(val == String("true"));
         } else {
             Serial.print("Invalid configuration key: ");
             Serial.println(key);

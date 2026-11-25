@@ -71,6 +71,8 @@ void Settings::printSettings() const
     Serial.println(m_mqttUserName);
     Serial.print("mqtt_password:          ");
     Serial.println(m_mqttPassword);
+    Serial.print("print_debug:          ");
+    Serial.println(m_printDebug);
 }
 
 void Settings::save()
@@ -88,6 +90,7 @@ void Settings::save()
     json["mqtt_port"] = m_mqttPort;
     json["mqtt_username"] = m_mqttUserName;
     json["mqtt_password"] = m_mqttPassword;
+    json["print_debug"] = m_printDebug;
 
     if (!SPIFFS.begin()) {
         // If fails first time, try to format
@@ -193,6 +196,9 @@ void Settings::load()
     }
     if (json.containsKey("mqtt_password")) {
         m_mqttPassword = String(json["mqtt_password"]);
+    }
+    if (json.containsKey("print_debug")) {
+        m_printDebug = String(json["print_debug"]) == String("true");
     }
 
     Serial.println("\nSettings: parsed json...");
@@ -366,3 +372,19 @@ void Settings::setMqttPassword(const String &password)
     m_mqttPassword = password;
     m_dirty = true;
 }
+
+void Settings::setPrintDebug(bool printDebug)
+{
+    if (m_printDebug == printDebug) {
+        return;
+    }
+
+    m_printDebug = printDebug;
+    m_dirty = true;
+}
+
+bool Settings::printDebug() const
+{
+    return m_printDebug;
+}
+

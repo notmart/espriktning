@@ -68,17 +68,21 @@ void WifiMQTTManager::setup()
 
     m_wifiManager.setConnectTimeout(2);
     int attempt = 0;
-    Serial.print("Connecting to wifi: ");
-    Serial.print(m_wifiManager.getWiFiSSID());
-    Serial.print(" ");
-    Serial.println(m_wifiManager.getWiFiPass());
+    if (s->printDebug()) {
+        Serial.print("Connecting to wifi: ");
+        Serial.print(m_wifiManager.getWiFiSSID());
+        Serial.print(" ");
+        Serial.println(m_wifiManager.getWiFiPass());
+    }
 
     bool ret = WiFi.begin(m_wifiManager.getWiFiSSID(), m_wifiManager.getWiFiPass(), 0, NULL, true);
     while(attempt < 30 && !WiFi.isConnected() && m_wifiManager.getWiFiSSID().length() > 0) {
         ++attempt;
         //bool ret = WiFi.begin(m_wifiManager.getWiFiSSID(), m_wifiManager.getWiFiPass(), 0, NULL, true);
-        Serial.print(WiFi.status());
-        Serial.println(".");
+        if (s->printDebug()) {
+            Serial.print(WiFi.status());
+            Serial.println(".");
+        }
         delay(500);
     }
 
@@ -86,7 +90,9 @@ void WifiMQTTManager::setup()
         m_wifiManager.autoConnect(m_captiveName);
     }
     m_status = Status(m_status | Status::WifiConnected);
-    Serial.println("Connected.");
+    if (s->printDebug()) {
+        Serial.println("Connected.");
+    }
 
    // readMQTTConfig();
 }
@@ -132,18 +138,26 @@ bool WifiMQTTManager::tryPublish(const String &topic, const String &val)
 
     while (attempts < 5 && !m_pubSubClient->connected()) {
         ++attempts;
-        Serial.print("Attempting MQTT connection...");
-        Serial.print(attempts);
-        Serial.print(" ");
+        if (s->printDebug()) {
+            Serial.print("Attempting MQTT connection...");
+            Serial.print(attempts);
+            Serial.print(" ");
+        }
         // Attempt to connect
         m_client.connect(s->mqttServer().c_str(), s->mqttPort());
-        Serial.print(s->mqttUserName().c_str());Serial.print(s->mqttPassword().c_str());
+        if (s->printDebug()) {
+            Serial.print(s->mqttUserName().c_str());Serial.print(s->mqttPassword().c_str());
+        }
         if (m_pubSubClient->connect(topic.c_str(), s->mqttUserName().c_str(), s->mqttPassword().c_str())) {
-            Serial.println("MQTT connected");
+            if (s->printDebug()) {
+                Serial.println("MQTT connected");
+            }
         } else {
-            Serial.print("failed:");
-            Serial.print(m_pubSubClient->state());
-            Serial.println(" try again in 5 seconds");
+            if (s->printDebug()) {
+                Serial.print("failed:");
+                Serial.print(m_pubSubClient->state());
+                Serial.println(" try again in 5 seconds");
+            }
             // Wait 5 seconds before retrying
             //delay(5000);
         }
@@ -156,7 +170,9 @@ bool WifiMQTTManager::tryPublish(const String &topic, const String &val)
         m_client.stop();
         return true;
     } else {
-        Serial.println("Server not responding: giving up");
+        if (s->printDebug()) {
+            Serial.println("Server not responding: giving up");
+        }
         return false;
     }
 }

@@ -21,7 +21,7 @@
 
 #include <Arduino.h>
 
-#define USE_AHT10 0
+#define USE_AHT10 1
 
 class Settings {
 public:
@@ -79,6 +79,9 @@ public:
     String mqttPassword() const;
     void setMqttPassword(const String &password);
 
+    void setPrintDebug(bool printDebug);
+    bool printDebug() const;
+
 private:
     static Settings *s_settings;
 
@@ -96,5 +99,6 @@ private:
     String m_mqttPassword;
 
     Error m_error = Error::NoError;
+    bool m_printDebug = false;
     bool m_dirty = true;
 };
